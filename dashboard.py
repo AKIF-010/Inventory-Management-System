@@ -1,281 +1,258 @@
 from tkinter import *
-from tkinter import ttk
-from tkcalendar import DateEntry
+from employee_db import employee_form 
+from time import strftime
+import datetime
 
-def employee_form():
-    global back_image
-    employee_frame=Frame(window,width=1070,height=568,bg='white')
-    employee_frame.place(x=200,y=100)
-    heading_label=Label(employee_frame,text='Manage Employee Details',font=('times new roman',16,'bold'),bg="#0f4d7d",fg='white')
-    heading_label.place(x=0,y=0,relwidth=1)
-    
-    back_image=PhotoImage(file='back.png')
-    back_button=Button(employee_frame,image=back_image,bd=0,bg='white',cursor='hand2',command=lambda: employee_frame.place_forget())
-    back_button.place(x=1,y=30)
-    
-    top_frame=Frame(employee_frame,bg='white')
-    top_frame.place(x=0,y=60,relwidth=1,height=235)
-    
-    search_frame=Frame(top_frame,bg='white')
-    search_frame.pack()
-    search_combobox=ttk.Combobox(search_frame,values=('ID','Name','Email'),font=('times new roman',12),state='readonly',cursor='hand2')
-    search_combobox.set('Search By')
-    search_combobox.grid(row=0,column=0,padx=20)
-    search_entry=Entry(search_frame,font=('times new roman',12),bg="#EBEAC1")
-    search_entry.grid(row=0,column=1)
-    search_button=Button(search_frame,text='SEARCH',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
-    search_button.grid(row=0,column=2,padx=20)
-    show_button=Button(search_frame,text='Show All',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
-    show_button.grid(row=0,column=3)
-    
-    
-    horizontal_scroll=Scrollbar(top_frame,orient=HORIZONTAL)
-    vertical_scroll=Scrollbar(top_frame,orient=VERTICAL)
-    employee_treeview=ttk.Treeview(top_frame,columns=('Emp ID','Name','Email','gender','dob','contact','employement_type',
-                                                       'education','work_shift','address','doj','salary','user_type'),show='headings',
-                                                      xscrollcommand=horizontal_scroll.set,yscrollcommand=vertical_scroll.set)
-    horizontal_scroll.pack(side=BOTTOM,fill=X)
-    vertical_scroll.pack(side=RIGHT,fill=Y,pady=(20,0))
-    horizontal_scroll.config(command=employee_treeview.xview)
-    vertical_scroll.config(command=employee_treeview.yview)
-    employee_treeview.pack(pady=(20,0))
-  
-    employee_treeview.heading('Emp ID',text='Emp ID')
-    employee_treeview.heading('Name',text='Name')  
-    employee_treeview.heading('Email',text='Email')
-    employee_treeview.heading('gender',text='Gender')
-    employee_treeview.heading('dob',text='D.O.B')
-    employee_treeview.heading('contact',text='Contact')
-    employee_treeview.heading('employement_type',text='Employement Type')
-    employee_treeview.heading('education',text='Education')
-    employee_treeview.heading('work_shift',text='Work Shift')
-    employee_treeview.heading('address',text='Address')
-    employee_treeview.heading('doj',text='D.O.J')
-    employee_treeview.heading('salary',text='Salary')
-    employee_treeview.heading('user_type',text='User Type')
-  
-    employee_treeview.column('Emp ID',width=60)
-    employee_treeview.column('Name',width=140)
-    employee_treeview.column('Email',width=180)
-    employee_treeview.column('gender',width=80)
-    employee_treeview.column('dob',width=100)
-    employee_treeview.column('contact',width=100)
-    employee_treeview.column('employement_type',width=120)
-    employee_treeview.column('education',width=120)
-    employee_treeview.column('work_shift',width=100)
-    employee_treeview.column('address',width=200)
-    employee_treeview.column('doj',width=100)
-    employee_treeview.column('salary',width=140)
-    employee_treeview.column('user_type',width=140)
-  
-  
-    emp_details_frame=Frame(employee_frame)
-    emp_details_frame.place(x=0,y=300)
-    
-    emp_id_label=Label(emp_details_frame,text='EmpID',font=('times new roman',12,'bold'))
-    emp_id_label.grid(row=0,column=0,padx=20,pady=10)
-    empid_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    empid_entry.grid(row=0,column=1,padx=20,pady=10)
-    
-    name_label=Label(emp_details_frame,text='Name',font=('times new roman',12,'bold'))
-    name_label.grid(row=0,column=2,padx=20,pady=10)
-    name_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    name_entry.grid(row=0,column=3,padx=20,pady=10)
-    
-    email_label=Label(emp_details_frame,text='Email',font=('times new roman',12,'bold'))
-    email_label.grid(row=0,column=4,padx=20,pady=10)
-    email_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    email_entry.grid(row=0,column=5,padx=20,pady=10)
-    
-    gender_label=Label(emp_details_frame,text='Gender',font=('times new roman',12,'bold'))
-    gender_label.grid(row=1,column=0,padx=20,pady=10)
-    gender_combobox=ttk.Combobox(emp_details_frame,values=('Male','Female','Other'),font=('times new roman',12),state='readonly',cursor='hand2',width=18 ) 
-    gender_combobox.grid(row=1,column=1,padx=20,pady=10)
-    gender_combobox.set('Select Gender')
-    
-    dob_label=Label(emp_details_frame,text='Date of Birth',font=('times new roman',12,'bold'))
-    dob_label.grid(row=1,column=2,padx=20,pady=10)
-    dob_date_entry=DateEntry(emp_details_frame,width=18,font=('times new roman',12),date_pattern='dd-mm-yyyy',state='readonly')
-    dob_date_entry.grid(row=1,column=3,padx=20,pady=10)
-    
-    contact_label=Label(emp_details_frame,text='Contact',font=('times new roman',12,'bold'))
-    contact_label.grid(row=1,column=4)
-    contact_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    contact_entry.grid(row=1,column=5,padx=20,pady=10)
-    
-    etyp_label=Label(emp_details_frame,text='Employement Type',font=('times new roman',12,'bold'))
-    etyp_label.grid(row=2,column=0)
-    etyp_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    etyp_entry.grid(row=2,column=1,padx=20,pady=10)
-    
-    edu_label=Label(emp_details_frame,text='Education',font=('times new roman',12,'bold'))
-    edu_label.grid(row=2,column=2)
-    edu_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    edu_entry.grid(row=2,column=3,padx=20,pady=10)
-    
-    wshift_label=Label(emp_details_frame,text='Work Shift',font=('times new roman',12,'bold'))
-    wshift_label.grid(row=2,column=4)
-    wshift_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    wshift_entry.grid(row=2,column=5,padx=20,pady=10)
-    
-    address_label=Label(emp_details_frame,text='address',font=('times new roman',12,'bold'))
-    address_label.grid(row=3,column=0)
-    address_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    address_entry.grid(row=3,column=1,padx=20,pady=10)
-    
-    doj_label=Label(emp_details_frame,text='Date of Join',font=('times new roman',12,'bold'))
-    doj_label.grid(row=3,column=2)
-    doj_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    doj_entry.grid(row=3,column=3,padx=20,pady=10)
-    
-    salary_label=Label(emp_details_frame,text='Salary',font=('times new roman',12,'bold'))
-    salary_label.grid(row=3,column=4)
-    salary_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    salary_entry.grid(row=3,column=5,padx=20,pady=10)
-    
-    utype_label=Label(emp_details_frame,text='User Type',font=('times new roman',12,'bold'))
-    utype_label.grid(row=4,column=2)
-    utype_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    utype_entry.grid(row=4,column=3,padx=20,pady=10)
-    
-    pw_label=Label(emp_details_frame,text='Password',font=('times new roman',12,'bold'))
-    pw_label.grid(row=4,column=4)
-    pw_entry=Entry(emp_details_frame,font=('times new roman',12),bg="lightyellow")
-    pw_entry.grid(row=4,column=5,padx=20,pady=10)
-    
-    
-    
-    
-    
-    
 window=Tk()
 
-window.title('Dashboard')
+window.title('Inventory Management System')
 window.geometry('1270x668+0+0')
 window.resizable(0,0)
 window.config(bg='white')
 
-titleimage=PhotoImage(file='dashboard.png')
-titleLabel=Label(window,image=titleimage,compound=LEFT,text='             Inventory Management System',font=('times new roman',40,'bold'),bg='#000080',fg='white',anchor='w',padx=15)
-titleLabel.place(x=0,y=0,relwidth=1,height=70)
+HEADER_HEIGHT = 70
+MENU_WIDTH = 200
+HEADER_WIDTH = 1270 - MENU_WIDTH
 
-logoutButton=Button(window,text='LogOut',font=('times new roman',20,'bold'))
-logoutButton.place(x=1100,y=10)
+# --- Position Constants ---
+HEADER_BOTTOM_Y = HEADER_HEIGHT + 1 
+DASHBOARD_TITLE_Y = HEADER_BOTTOM_Y + 15 
+CARD_START_Y = DASHBOARD_TITLE_Y + 70 
 
-subtitleLabel = Label(window,
-                      text='Welcome Admin\t\t Date : 01-01-2024\t\t Time : 12:00 PM', 
-                      font=('times new roman', 15), 
-                      bg="#325872", 
-                      fg='white'
-                    )
-subtitleLabel.place(x=0, y=70, relwidth=1, height=30)
+# --- Hover Colors ---
+ORIGINAL_BG = '#1D293D'
+HOVER_BG = '#155DFC'
 
-#left frame
+# --- Hover Event Functions ---
+def on_enter(event):
+    # Changes the button's background to HOVER_BG when the cursor enters
+    event.widget.config(bg=HOVER_BG)
 
-leftframe = Frame(window,bd=2,relief=RIDGE)
-leftframe.place(x=0,y=102,height=555,width=200)
+def on_leave(event):
+    # Changes the button's background back to ORIGINAL_BG when the cursor leaves
+    event.widget.config(bg=ORIGINAL_BG)
 
-lf_image=PhotoImage(file='leftframe_image.png')
-leftframe_image=Label(leftframe,image=lf_image)
-leftframe_image.pack()
 
-manu=Label(leftframe,text='Manu',font=('times new roman',20,'bold'), bg="#00415F",fg='white')
+# --- Top Header Frame ---
+top_frame = Frame(window, bg='white', height=HEADER_HEIGHT, width=HEADER_WIDTH)
+top_frame.place(x=MENU_WIDTH, y=0)
+top_frame.grid_propagate(False)
+
+top_border = Frame(window, bg="#E5E7EB", height=1, width=HEADER_WIDTH)
+top_border.place(x=MENU_WIDTH, y=HEADER_HEIGHT)
+
+top_frame.columnconfigure(0, weight=1)
+top_frame.columnconfigure(1, weight=0)
+top_frame.rowconfigure(0, weight=1)
+
+# Left section (Welcome and Date/Time)
+left_frame = Frame(top_frame, bg='white')
+left_frame.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+
+welcome_label = Label(left_frame, text='Welcome, Admin', font=('Tahoma', 16), bg='white', fg='black', anchor=W)
+welcome_label.grid(row=0, column=0, sticky=W)
+
+date_label = Label(left_frame, font=('Verdana', 13), bg='white', fg='black', anchor=W)
+date_label.grid(row=1, column=0, sticky=W)
+
+def update_time():
+    current_time = strftime('%I:%M:%S %p')
+    current_date = strftime('%d-%m-%Y')
+    date_label.config(text=f"Date: {current_date}      Time: {current_time}")
+    date_label.after(1000, update_time)
+
+update_time()
+
+# Right section (Logout Button - Vertically Centered)
+right_frame = Frame(top_frame, bg='white')
+right_frame.grid(row=0, column=1, sticky="nse", padx=20) 
+right_frame.columnconfigure(0, weight=1)
+right_frame.rowconfigure(0, weight=1)
+
+# --- UPDATED LOGOUT BUTTON DESIGN (Kept) ---
+logout_button_bg = '#E8F5E9' 
+logout_button_fg = '#008C73' 
+
+try:
+    logout_icon_image = PhotoImage(file='logout_icon.png')
+except TclError:
+    print("Warning: 'logout_icon.png' not found. Using text-only logout button.")
+    logout_icon_image = None
+
+logout_button = Button(right_frame, text='Logout', font=('Arial', 12, 'bold'), 
+                       bg=logout_button_bg, fg=logout_button_fg, bd=2, relief=RIDGE, 
+                       cursor='hand2', padx=10, pady=5)
+
+if logout_icon_image:
+    logout_button.config(image=logout_icon_image, compound=LEFT, anchor=W, padx=5)
+    logout_button.image = logout_icon_image 
+
+logout_button.grid(row=0, column=0, sticky="") 
+# ------------------------------------
+
+
+# --- DASHBOARD OVERVIEW TITLE SECTION ---
+dashboard_title = Label(window, text="Dashboard Overview", font=("Arial", 20, "bold"), fg='#333333', bg='white', anchor=W)
+dashboard_title.place(x=MENU_WIDTH + 20, y=DASHBOARD_TITLE_Y + 10) 
+# ---------------------------------------------
+
+
+# --- Left Menu Frame ---
+leftframe = Frame(window,bg=ORIGINAL_BG) 
+leftframe.place(x=0,y=0,relheight=1,width=200)
+
+manu_image=PhotoImage(file='inventory.png')
+# This Label keeps padx=10
+manu=Label(leftframe,image=manu_image,compound=LEFT,text='  IMS PRO',font=('times new roman',20), bg=ORIGINAL_BG,fg='white',anchor=W,padx=10,height=70,width=200)
 manu.pack(fill=X)
 
-employee_image=PhotoImage(file='employee.png')
-employee_button=Button(leftframe,image=employee_image,compound=LEFT,text='  Employee',font=('times new roman',20,'bold'),anchor=W,padx=10,command=employee_form)
-employee_button.pack(fill=X)
+border = Frame(leftframe, bg=HOVER_BG, height=1, width=200)
+border.place(x=0,y=70)
+
+active_bg_color = HOVER_BG 
+
+# --- Menu Buttons with Hover Binding (padx=10 ADDED BACK, height removed) ---
+
+employee_image=PhotoImage(file='employee1.png')
+employee_button=Button(leftframe,image=employee_image,compound=LEFT,text='  Employee',font=('times new roman',18),anchor=W,
+                       padx=10, # ADDED BACK padx
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: employee_form(window))
+employee_button.pack(fill=X,pady=10) 
+employee_button.bind('<Enter>', on_enter)
+employee_button.bind('<Leave>', on_leave)
 
 supply_image=PhotoImage(file='supplier.png')
-supply_button=Button(leftframe,image=supply_image,compound=LEFT,text='  Supplier',font=('times new roman',20,'bold'),anchor=W,padx=10)
-supply_button.pack(fill=X)
+supply_button=Button(leftframe,image=supply_image,compound=LEFT,text='  Supplier',font=('times new roman',18),anchor=W,
+                     padx=10, # ADDED BACK padx
+                     bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+supply_button.pack(fill=X,pady=10)
+supply_button.bind('<Enter>', on_enter)
+supply_button.bind('<Leave>', on_leave)
 
-category_image=PhotoImage(file='categorization.png')
-category_button=Button(leftframe,image=category_image,compound=LEFT,text='  Categories',font=('times new roman',20,'bold'),anchor=W,padx=10)
-category_button.pack(fill=X)
+category_image=PhotoImage(file='category.png')
+category_button=Button(leftframe,image=category_image,compound=LEFT,text='  Categories',font=('times new roman',18),anchor=W,
+                       padx=10, # ADDED BACK padx
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+category_button.pack(fill=X,pady=10)
+category_button.bind('<Enter>', on_enter)
+category_button.bind('<Leave>', on_leave)
 
 products_image=PhotoImage(file='product.png')
-products_button=Button(leftframe,image=products_image,compound=LEFT,text='  Products',font=('times new roman',20,'bold'),anchor=W,padx=10)
-products_button.pack(fill=X)
+products_button=Button(leftframe,image=products_image,compound=LEFT,text='  Products',font=('times new roman',18),anchor=W,
+                       padx=10, # ADDED BACK padx
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+products_button.pack(fill=X,pady=10)
+products_button.bind('<Enter>', on_enter)
+products_button.bind('<Leave>', on_leave)
 
-sales_image=PhotoImage(file='sales.png')
-sales_button=Button(leftframe,image=sales_image,compound=LEFT,text='  Sales',font=('times new roman',20,'bold'),anchor=W,padx=10)
-sales_button.pack(fill=X)
+sales_image=PhotoImage(file='category.png')
+sales_button=Button(leftframe,image=sales_image,compound=LEFT,text='  Sales',font=('times new roman',18),anchor=W,
+                    padx=10, # ADDED BACK padx
+                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+sales_button.pack(fill=X,pady=10)
+sales_button.bind('<Enter>', on_enter)
+sales_button.bind('<Leave>', on_leave)
 
 exit_image=PhotoImage(file='exit.png')
-exit_button=Button(leftframe,image=exit_image,compound=LEFT,text='  Exit',font=('times new roman',20,'bold'),anchor=W,padx=10)
-exit_button.pack(fill=X)
+exit_button=Button(leftframe,image=exit_image,compound=LEFT,text='  Exit',font=('times new roman',18),anchor=W,
+                    padx=10, # ADDED BACK padx
+                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+exit_button.pack(fill=X,pady=10)
+exit_button.bind('<Enter>', on_enter)
+exit_button.bind('<Leave>', on_leave)
+
 
 #frames
 
-#employee frame
-emp_frame=Frame(window,bg="#4B7088",bd=3,relief=RIDGE)
-emp_frame.place(x=400,y=125,height=170,width=280)
+# --- Employee Frame ---
+emp_frame = Frame(window, bg="#3A78F2", bd=0)
+emp_frame.place(x=400, y=CARD_START_Y, height=150, width=250)
+emp_frame.grid_propagate(False)
 
-total_emp_image=PhotoImage(file='staff.png')
-total_emp_label=Label(emp_frame,image=total_emp_image,bg="#4B7088")
-total_emp_label.pack(pady=10)
+total_emp_text = Label(emp_frame, text="Total Employees", 
+                       font=('times new roman', 12), fg='white', bg="#3A78F2")
+total_emp_text.place(x=15, y=15)
 
-total_emp_text=Label(emp_frame,text="Total Employee",font=('times new roman',15,'bold'),fg='white',bg="#4B7088")
-total_emp_text.pack()
+total_emp_count = Label(emp_frame, text="0", 
+                         font=('times new roman', 40, 'bold'), fg='white', bg="#3A78F2")
+total_emp_count.place(x=15, y=50)
 
-total_emp_count=Label(emp_frame,text="0",font=('times new roman',30,'bold'),fg='white',bg="#4B7088")
-total_emp_count.pack()
+total_emp_image = PhotoImage(file='employee1.png')
+total_emp_label = Label(emp_frame, image=total_emp_image, bg="#3A78F2")
+total_emp_label.image = total_emp_image
+total_emp_label.place(relx=0.9, rely=0.55, anchor=E)
 
-#supplier frame
-supplier_frame=Frame(window,bg="#4B7088",bd=3,relief=RIDGE)
-supplier_frame.place(x=800,y=125,height=170,width=280)
+# --- Supplier Frame ---
+supplier_frame = Frame(window, bg="#7030A0", bd=0)
+supplier_frame.place(x=800, y=CARD_START_Y, height=150, width=250)
+supplier_frame.grid_propagate(False)
 
-total_supplier_image=PhotoImage(file='supplier_1.png')
-total_supplier_label=Label(supplier_frame,image=total_supplier_image,bg="#4B7088")
-total_supplier_label.pack(pady=10)
+total_supplier_text = Label(supplier_frame, text="Total Suppliers", 
+                       font=('times new roman', 12), fg='white', bg="#7030A0")
+total_supplier_text.place(x=15, y=15)
 
-total_supplier_text=Label(supplier_frame,text="Total Supplier",font=('times new roman',15,'bold'),fg='white',bg="#4B7088")
-total_supplier_text.pack()
+total_supplier_count = Label(supplier_frame, text="0", 
+                         font=('times new roman', 40, 'bold'), fg='white', bg="#7030A0")
+total_supplier_count.place(x=15, y=50)
 
-total_supplier_count=Label(supplier_frame,text="0",font=('times new roman',30,'bold'),fg='white',bg="#4B7088")
-total_supplier_count.pack()
+total_supplier_image = PhotoImage(file='supplier.png')
+total_supplier_label = Label(supplier_frame, image=total_supplier_image, bg="#7030A0")
+total_supplier_label.image = total_supplier_image
+total_supplier_label.place(relx=0.9, rely=0.55, anchor=E)
 
-#category frame
-category_frame=Frame(window,bg="#4B7088",bd=3,relief=RIDGE)
-category_frame.place(x=400,y=310,height=170,width=280)
+# --- Category Frame ---
+# Adjusted Y for second row, factoring in CARD_START_Y and a gap (e.g., 175px total offset)
+category_frame = Frame(window, bg="#008000", bd=0)
+category_frame.place(x=400, y=CARD_START_Y + 175, height=150, width=250) 
+category_frame.grid_propagate(False)
 
-total_category_image=PhotoImage(file='category.png')
-total_category_label=Label(category_frame,image=total_category_image,bg="#4B7088")
-total_category_label.pack(pady=10)
+total_category_text = Label(category_frame, text="Total Categories", 
+                       font=('times new roman', 12), fg='white', bg="#008000")
+total_category_text.place(x=15, y=15)
 
-total_category_text=Label(category_frame,text="Total Category",font=('times new roman',15,'bold'),fg='white',bg="#4B7088")
-total_category_text.pack()
+total_category_count = Label(category_frame, text="0", 
+                         font=('times new roman', 40, 'bold'), fg='white', bg="#008000")
+total_category_count.place(x=15, y=50)
 
-total_category_count=Label(category_frame,text="0",font=('times new roman',30,'bold'),fg='white',bg="#4B7088")
-total_category_count.pack()
+total_category_image = PhotoImage(file='category.png')
+total_category_label = Label(category_frame, image=total_category_image, bg="#008000")
+total_category_label.image = total_category_image
+total_category_label.place(relx=0.9, rely=0.55, anchor=E)
 
-#product frame
-product_frame=Frame(window,bg="#4B7088",bd=3,relief=RIDGE)
-product_frame.place(x=800,y=310,height=170,width=280)
+# --- Product Frame ---
+product_frame = Frame(window, bg="#FF4500", bd=0)
+product_frame.place(x=800, y=CARD_START_Y + 175, height=150, width=250)
+product_frame.grid_propagate(False)
 
-total_product_image=PhotoImage(file='product_1.png')
-total_product_label=Label(product_frame,image=total_product_image,bg="#4B7088")
-total_product_label.pack(pady=10)
+total_product_text = Label(product_frame, text="Total Products", 
+                       font=('times new roman', 12), fg='white', bg="#FF4500")
+total_product_text.place(x=15, y=15)
 
-total_product_text=Label(product_frame,text="Total product",font=('times new roman',15,'bold'),fg='white',bg="#4B7088")
-total_product_text.pack()
+total_product_count = Label(product_frame, text="0", 
+                         font=('times new roman', 40, 'bold'), fg='white', bg="#FF4500")
+total_product_count.place(x=15, y=50)
 
-total_product_count=Label(product_frame,text="0",font=('times new roman',30,'bold'),fg='white',bg="#4B7088")
-total_product_count.pack()
+total_product_image = PhotoImage(file='product.png')
+total_product_label = Label(product_frame, image=total_product_image, bg="#FF4500")
+total_product_label.image = total_product_image
+total_product_label.place(relx=0.9, rely=0.55, anchor=E)
 
-#sale frame
-sales_frame=Frame(window,bg="#4B7088",bd=3,relief=RIDGE)
-sales_frame.place(x=600,y=495,height=170,width=280)
+# --- Sales Frame ---
+sales_frame = Frame(window, bg="#00B09E", bd=0)
+sales_frame.place(x=600, y=CARD_START_Y + 350, height=150, width=250)
+sales_frame.grid_propagate(False)
 
-total_sales_image=PhotoImage(file='sales_1.png')
-total_sales_label=Label(sales_frame,image=total_sales_image,bg="#4B7088")
-total_sales_label.pack(pady=10)
+total_sales_text = Label(sales_frame, text="Total Sales", 
+                       font=('times new roman', 12), fg='white', bg="#00B09E")
+total_sales_text.place(x=15, y=15)
 
-total_sales_text=Label(sales_frame,text="Total sales",font=('times new roman',15,'bold'),fg='white',bg="#4B7088")
-total_sales_text.pack()
+total_sales_count = Label(sales_frame, text="0", 
+                         font=('times new roman', 40, 'bold'), fg='white', bg="#00B09E")
+total_sales_count.place(x=15, y=50)
 
-total_sales_count=Label(sales_frame,text="0",font=('times new roman',30,'bold'),fg='white',bg="#4B7088")
-total_sales_count.pack()
+total_sales_image = PhotoImage(file='sale.png')
+total_sales_label = Label(sales_frame, image=total_sales_image, bg="#00B09E")
+total_sales_label.image = total_sales_image
+total_sales_label.place(relx=0.9, rely=0.55, anchor=E)
 
 window.mainloop()
