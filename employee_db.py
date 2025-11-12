@@ -4,20 +4,51 @@ from tkcalendar import DateEntry
 from tkinter import messagebox
 import pymysql
 
-
+def select_data(event,empid_entry,name_entry,email_entry,gender_combobox,
+                                                       dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
+                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox):
+    index=employee_treeview.selection()
+    content=employee_treeview.item(index)
+    row=content['values']
+    clear_fields(empid_entry,name_entry,email_entry,
+                    gender_combobox,dob_date_entry,contact_entry,
+                    etyp_combobox,edu_combobox,password_entry,
+                    wshift_combobox,address_text,doj_date_entry,
+                    salary_entry,usertyp_combobox,False)
+    empid_entry.insert(0,row[0])
+    name_entry.insert(0,row[1])
+    email_entry.insert(0,row[2])    
+    gender_combobox.set(row[3])
+    dob_date_entry.set_date(row[4])
+    contact_entry.insert(0,row[5])
+    etyp_combobox.set(row[6])
+    edu_combobox.set(row[7])
+    wshift_combobox.set(row[8])
+    address_text.insert('1.0',row[9])
+    doj_date_entry.set_date(row[10])
+    salary_entry.insert(0,row[11])
+    usertyp_combobox.set(row[12])
+    password_entry.insert(0,row[13])
+    
 def treeview_data():
     cursor,connection=connect_database()
     if cursor is None and connection is None:
         return
-    cursor.execute('SELECT * FROM employee_data')
-    employee_records=cursor.fetchall()
-    employee_treeview.delete(*employee_treeview.get_children())
-    for record in employee_records:
-        employee_treeview.insert('',END,values=record)
-    
+    cursor.execute('USE inventory_management_system')
+    try:
+        cursor.execute('SELECT * FROM employee_data')
+        employee_records=cursor.fetchall()
+        employee_treeview.delete(*employee_treeview.get_children())
+        for record in employee_records:
+            employee_treeview.insert('',END,values=record)
+    except Exception as e:
+        messagebox.showerror('Error',f'Error due to {str(e)}') 
+    finally:
+        connection.close()
+        cursor.close()
 def clear_fields(empid_entry,name_entry,email_entry,gender_combobox,
                 dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
-                wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox):
+                wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox,check):
     empid_entry.delete(0,END)
     name_entry.delete(0,END)
     email_entry.delete(0,END)
@@ -33,7 +64,36 @@ def clear_fields(empid_entry,name_entry,email_entry,gender_combobox,
     salary_entry.delete(0,END)
     usertyp_combobox.set('Select User Type')
     password_entry.delete(0,END)
-    
+    if check: 
+        employee_treeview.selection_remove(employee_treeview.selection())
+
+def update_employee(emp_id, name, email, gender, dob, contact, employement_type, 
+                    education, work_shift, address, doj, salary, user_type, password):
+    selected=employee_treeview.selection()
+    if not selected:
+        messagebox.showerror('Error','Please select a record to update')
+    else:
+        cursor,connection=connect_database()
+        if cursor is None and connection is None:
+            return
+        cursor.execute('USE inventory_management_system')
+        cursor.execute('SELECT * FROM employee_data WHERE emp_id=%s',(emp_id,))
+        current_data=cursor.fetchone()
+        current_data=current_data[1:]
+        address=address.strip()
+        new_data=(name, email, gender, dob, contact, employement_type, 
+                    education, work_shift, address, doj, salary, user_type, password)
+        if current_data==new_data:
+            messagebox.showinfo('Info','No changes detected to update')
+            return
+        cursor.execute('UPDATE employee_data SET name=%s, email=%s, gender=%s, dob=%s, '
+                       'contact=%s, employement_type=%s, education=%s, work_shift=%s, address=%s, '
+                       'doj=%s, salary=%s, user_type=%s, password=%s WHERE emp_id=%s',
+                       (name, email, gender, dob, contact, employement_type, 
+                        education, work_shift, address, doj, salary, user_type, password, emp_id,))
+    connection.commit()
+    treeview_data()
+    messagebox.showinfo('Success','Record Updated Successfully')
 def connect_database():
     try:
         connection=pymysql.connect(host='localhost',user='root',password='#01#02#03abc') 
@@ -41,12 +101,16 @@ def connect_database():
     except:
         messagebox.showerror('Error','Database Connectivity Issue,Please Try Again') 
         return None, None
-    cursor.execute('CREATE DATABASE IF NOT EXISTS inventory_management_system')
-    cursor.execute('USE inventory_management_system')
-    cursor.execute('CREATE TABLE IF NOT EXISTS employee_data(emp_id INT PRIMARY KEY, name VARCHAR(200), email VARCHAR(200), gender VARCHAR(50), dob VARCHAR(50), contact VARCHAR(15), employement_type VARCHAR(50), education VARCHAR(100), work_shift VARCHAR(50), address VARCHAR(200), doj VARCHAR(50), salary VARCHAR(50), user_type VARCHAR(50), password VARCHAR(20))')
+   
     return cursor,connection
 
-
+def create_database_table():
+    cursor,connection=connect_database()
+    cursor.execute('CREATE DATABASE IF NOT EXISTS inventory_management_system')
+    cursor.execute('USE inventory_management_system')
+    cursor.execute('CREATE TABLE IF NOT EXISTS employee_data(emp_id INT PRIMARY KEY, name VARCHAR(200),'
+                   'email VARCHAR(200), gender VARCHAR(50), dob VARCHAR(50), contact VARCHAR(15), employement_type VARCHAR(50), '
+                   'education VARCHAR(100), work_shift VARCHAR(50), address VARCHAR(200), doj VARCHAR(50), salary VARCHAR(50), user_type VARCHAR(50), password VARCHAR(20))')
 
 def add_employee(emp_id, name, email, gender, dob, contact, employement_type, education, work_shift, address, doj, salary, user_type, password):
     
@@ -57,12 +121,23 @@ def add_employee(emp_id, name, email, gender, dob, contact, employement_type, ed
         cursor,connection=connect_database()
         if cursor is None and connection is None:
             return
-        cursor.execute('INSERT INTO employee_data VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(emp_id, name, email, gender, dob, 
-                        contact, employement_type, education, work_shift, address, doj, salary, user_type, password))
-        connection.commit()
-        treeview_data()
-        messagebox.showinfo('Success','Data Added Successfully')
-        
+        cursor.execute('USE inventory_management_system')
+        try:
+            cursor.execute('SELECT * FROM employee_data WHERE emp_id=%s',(emp_id,))
+            if cursor.fetchone() :
+                messagebox.showerror('Error','Employee ID already exists')
+                return
+            address=address.strip()
+            cursor.execute('INSERT INTO employee_data VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',(emp_id, name, email, gender, dob, 
+                            contact, employement_type, education, work_shift, address, doj, salary, user_type, password))
+            connection.commit()
+            treeview_data()
+            messagebox.showinfo('Success','Data Added Successfully')
+        except Exception as e:
+            messagebox.showerror('Error',f'Error due to {str(e)}')
+        finally:
+            connection.close()
+            cursor.close()
         
 def fix_calendar_position(widget):
     def modified_popup(event): 
@@ -142,6 +217,7 @@ def employee_form(window):
     employee_treeview.column('user_type',width=140)
   
     treeview_data()
+    
     emp_details_frame=Frame(employee_frame,bg='white')
     emp_details_frame.place(x=15,y=300)
     
@@ -237,7 +313,11 @@ def employee_form(window):
                                            usertyp_combobox.get(),password_entry.get())) 
     add_button.grid(row=0,column=0,padx=20)
     
-    update_button=Button(save_frame,text='Update',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
+    update_button=Button(save_frame,text='Update',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',
+                         command=lambda: update_employee(empid_entry.get(),name_entry.get(),email_entry.get(),gender_combobox.get(),
+                                           dob_date_entry.get(),contact_entry.get(),etyp_combobox.get(),edu_combobox.get(),
+                                           wshift_combobox.get(),address_text.get('1.0',END),doj_date_entry.get(),salary_entry.get(),
+                                           usertyp_combobox.get(),password_entry.get()))
     update_button.grid(row=0,column=1,padx=20)
     
     delete_button=Button(save_frame,text='Delete',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
@@ -245,5 +325,11 @@ def employee_form(window):
     
     clear_button=Button(save_frame,text='Clear',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: clear_fields(empid_entry,name_entry,email_entry,gender_combobox,
                                                        dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
-                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox))
+                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox,True))
     clear_button.grid(row=0,column=3,padx=20)
+
+    employee_treeview.bind('<ButtonRelease-1>',lambda event: select_data(event,empid_entry,name_entry,email_entry,gender_combobox,
+                                                       dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
+                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox))
+    
+    create_database_table()
