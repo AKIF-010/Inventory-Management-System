@@ -4,32 +4,7 @@ from tkcalendar import DateEntry
 from tkinter import messagebox
 import pymysql
 
-def select_data(event,empid_entry,name_entry,email_entry,gender_combobox,
-                                                       dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
-                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox):
-    index=employee_treeview.selection()
-    content=employee_treeview.item(index)
-    row=content['values']
-    clear_fields(empid_entry,name_entry,email_entry,
-                    gender_combobox,dob_date_entry,contact_entry,
-                    etyp_combobox,edu_combobox,password_entry,
-                    wshift_combobox,address_text,doj_date_entry,
-                    salary_entry,usertyp_combobox,False)
-    empid_entry.insert(0,row[0])
-    name_entry.insert(0,row[1])
-    email_entry.insert(0,row[2])    
-    gender_combobox.set(row[3])
-    dob_date_entry.set_date(row[4])
-    contact_entry.insert(0,row[5])
-    etyp_combobox.set(row[6])
-    edu_combobox.set(row[7])
-    wshift_combobox.set(row[8])
-    address_text.insert('1.0',row[9])
-    doj_date_entry.set_date(row[10])
-    salary_entry.insert(0,row[11])
-    usertyp_combobox.set(row[12])
-    password_entry.insert(0,row[13])
-    
+
 def treeview_data():
     cursor,connection=connect_database()
     if cursor is None and connection is None:
@@ -76,24 +51,31 @@ def update_employee(emp_id, name, email, gender, dob, contact, employement_type,
         cursor,connection=connect_database()
         if cursor is None and connection is None:
             return
-        cursor.execute('USE inventory_management_system')
-        cursor.execute('SELECT * FROM employee_data WHERE emp_id=%s',(emp_id,))
-        current_data=cursor.fetchone()
-        current_data=current_data[1:]
-        address=address.strip()
-        new_data=(name, email, gender, dob, contact, employement_type, 
-                    education, work_shift, address, doj, salary, user_type, password)
-        if current_data==new_data:
-            messagebox.showinfo('Info','No changes detected to update')
-            return
-        cursor.execute('UPDATE employee_data SET name=%s, email=%s, gender=%s, dob=%s, '
-                       'contact=%s, employement_type=%s, education=%s, work_shift=%s, address=%s, '
-                       'doj=%s, salary=%s, user_type=%s, password=%s WHERE emp_id=%s',
-                       (name, email, gender, dob, contact, employement_type, 
-                        education, work_shift, address, doj, salary, user_type, password, emp_id,))
-    connection.commit()
-    treeview_data()
-    messagebox.showinfo('Success','Record Updated Successfully')
+        try:
+            cursor.execute('USE inventory_management_system')
+            cursor.execute('SELECT * FROM employee_data WHERE emp_id=%s',(emp_id,))
+            current_data=cursor.fetchone()
+            current_data=current_data[1:]
+            address=address.strip()
+            new_data=(name, email, gender, dob, contact, employement_type, 
+                        education, work_shift, address, doj, salary, user_type, password)
+            if current_data==new_data:
+                messagebox.showinfo('Info','No changes detected to update')
+                return
+            
+            cursor.execute('UPDATE employee_data SET name=%s, email=%s, gender=%s, dob=%s, '
+                        'contact=%s, employement_type=%s, education=%s, work_shift=%s, address=%s, '
+                        'doj=%s, salary=%s, user_type=%s, password=%s WHERE emp_id=%s',
+                        (name, email, gender, dob, contact, employement_type, 
+                            education, work_shift, address, doj, salary, user_type, password, emp_id,))
+            connection.commit()
+            treeview_data()
+            messagebox.showinfo('Success','Record Updated Successfully')
+        except Exception as e:
+            messagebox.showerror('Error',f'Error due to {str(e)}')
+        finally:
+            connection.close()
+            cursor.close() 
 def connect_database():
     try:
         connection=pymysql.connect(host='localhost',user='root',password='#01#02#03abc') 
@@ -112,6 +94,33 @@ def create_database_table():
                    'email VARCHAR(200), gender VARCHAR(50), dob VARCHAR(50), contact VARCHAR(15), employement_type VARCHAR(50), '
                    'education VARCHAR(100), work_shift VARCHAR(50), address VARCHAR(200), doj VARCHAR(50), salary VARCHAR(50), user_type VARCHAR(50), password VARCHAR(20))')
 
+
+def select_data(event,empid_entry,name_entry,email_entry,gender_combobox,
+                                                       dob_date_entry,contact_entry,etyp_combobox,edu_combobox,password_entry,
+                                                       wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox):
+    index=employee_treeview.selection()
+    content=employee_treeview.item(index)
+    row=content['values']
+    clear_fields(empid_entry,name_entry,email_entry,
+                    gender_combobox,dob_date_entry,contact_entry,
+                    etyp_combobox,edu_combobox,password_entry,
+                    wshift_combobox,address_text,doj_date_entry,
+                    salary_entry,usertyp_combobox,False)
+    empid_entry.insert(0,row[0])
+    name_entry.insert(0,row[1])
+    email_entry.insert(0,row[2])    
+    gender_combobox.set(row[3])
+    dob_date_entry.set_date(row[4])
+    contact_entry.insert(0,row[5])
+    etyp_combobox.set(row[6])
+    edu_combobox.set(row[7])
+    wshift_combobox.set(row[8])
+    address_text.insert('1.0',row[9])
+    doj_date_entry.set_date(row[10])
+    salary_entry.insert(0,row[11])
+    usertyp_combobox.set(row[12])
+    password_entry.insert(0,row[13])
+    
 def add_employee(emp_id, name, email, gender, dob, contact, employement_type, education, work_shift, address, doj, salary, user_type, password):
     
     if (emp_id=='' or name=='' or email=='' or gender=='Select Gender'  or contact=='' or employement_type=='Select Type' or education=='Select Education' or
@@ -148,32 +157,91 @@ def fix_calendar_position(widget):
         if hasattr(widget, '_top_cal') and widget._top_cal is not None:
             widget._top_cal.geometry(f'+{x}+{y - 250}')
     widget.bind('<Button-1>', modified_popup, add='+')
+
+
+def delete_employee(emp_id):
+    
+    selected=employee_treeview.selection()
+    if not selected:
+        messagebox.showerror('Error','please select a record to delete')
+        
+    else:
+        messagebox_result=messagebox.askyesno('Confirm','Do you really want to delete this record?')
+        if messagebox_result:
+            cursor,connection=connect_database()
+            if not cursor and not connection:
+                return
+            try:
+                cursor.execute('USE inventory_management_system')
+                cursor.execute('DELETE FROM employee_data WHERE emp_id=%s',(emp_id,))
+                connection.commit()
+                treeview_data()
+                messagebox.showinfo('Success','Record Deleted Successfully')
+            except Exception as e:
+                messagebox.showerror('Error',f'Error due to {str(e)}')
+            finally:
+                connection.close()
+                cursor.close()
+            
+def search_employee(search_by,search_txt):
+    if search_by=='Search By':
+        messagebox.showerror('Error','Please select a search criteria')
+    elif search_txt=='':
+        messagebox.showerror('Error','Please enter search text')
+    else:
+        cursor,connection=connect_database()
+        if cursor is None and connection is None:
+            return
+        cursor.execute('USE inventory_management_system')
+        try:
+            if search_by=='ID':
+                cursor.execute('SELECT * FROM employee_data WHERE emp_id Like %s',(search_txt+'%',))
+            elif search_by=='Name': 
+                cursor.execute('SELECT * FROM employee_data WHERE name LIKE %s',('%'+search_txt+'%',))
+            elif search_by=='User Type':
+                cursor.execute('SELECT * FROM employee_data WHERE user_type LIKE %s',('%'+search_txt+'%',))
+            else:
+                cursor.execute('SELECT * FROM employee_data WHERE email LIKE %s',('%'+search_txt+'%',))
+            search_records=cursor.fetchall()
+            employee_treeview.delete(*employee_treeview.get_children())
+            for record in search_records:
+                employee_treeview.insert('',END,values=record)
+        except Exception as e:
+            messagebox.showerror('Error',f'Error due to {str(e)}') 
+        finally:
+            connection.close()
+            cursor.close()
+
+def show_all(search_entry,search_combobox):
+    treeview_data()
+    search_entry.delete(0,END)
+    search_combobox.set('Search By')
     
 def employee_form(window):
     global back_image,employee_treeview
     employee_frame=Frame(window,width=1070,height=598,bg='white')
-    employee_frame.place(x=200,y=70)
+    employee_frame.place(x=200,y=71)
     heading_label=Label(employee_frame,text='Manage Employee Details',font=('times new roman',16,'bold'),bg="#0f4d7d",fg='white')
     heading_label.place(x=0,y=0,relwidth=1)
     
     
     
     top_frame=Frame(employee_frame,bg='white')
-    top_frame.place(x=0,y=35,relwidth=1,height=235)
+    top_frame.place(x=0,y=35,relwidth=1,height=250)
     
     back_image=PhotoImage(file='back.png')
     back_button=Button(top_frame,image=back_image,bd=0,bg='white',cursor='hand2',command=lambda: employee_frame.place_forget())
     back_button.place(x=1,y=1)
     search_frame=Frame(top_frame,bg='white')
     search_frame.pack()
-    search_combobox=ttk.Combobox(search_frame,values=('ID','Name','Email'),font=('times new roman',12),state='readonly',cursor='hand2')
+    search_combobox=ttk.Combobox(search_frame,values=('ID','Name','Email','User Type'),font=('times new roman',12),state='readonly',cursor='hand2')
     search_combobox.set('Search By')
     search_combobox.grid(row=0,column=0,padx=20)
     search_entry=Entry(search_frame,font=('times new roman',12),bg="#EBEAC1")
     search_entry.grid(row=0,column=1)
-    search_button=Button(search_frame,text='SEARCH',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
+    search_button=Button(search_frame,text='SEARCH',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: search_employee(search_combobox.get(),search_entry.get()))
     search_button.grid(row=0,column=2,padx=20)
-    show_button=Button(search_frame,text='Show All',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
+    show_button=Button(search_frame,text='Show All',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: show_all(search_entry,search_combobox))
     show_button.grid(row=0,column=3)
     
     
@@ -181,7 +249,7 @@ def employee_form(window):
     vertical_scroll=Scrollbar(top_frame,orient=VERTICAL)
     employee_treeview=ttk.Treeview(top_frame,columns=('Emp ID','Name','Email','gender','dob','contact','employement_type',
                                                        'education','work_shift','address','doj','salary','user_type'),show='headings',
-                                                      xscrollcommand=horizontal_scroll.set,yscrollcommand=vertical_scroll.set)
+                                                      xscrollcommand=horizontal_scroll.set,yscrollcommand=vertical_scroll.set,height=8)
     horizontal_scroll.pack(side=BOTTOM,fill=X)
     vertical_scroll.pack(side=RIGHT,fill=Y,pady=(20,0))
     horizontal_scroll.config(command=employee_treeview.xview)
@@ -320,7 +388,7 @@ def employee_form(window):
                                            usertyp_combobox.get(),password_entry.get()))
     update_button.grid(row=0,column=1,padx=20)
     
-    delete_button=Button(save_frame,text='Delete',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d')
+    delete_button=Button(save_frame,text='Delete',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: delete_employee(empid_entry.get()))
     delete_button.grid(row=0,column=2,padx=20)
     
     clear_button=Button(save_frame,text='Clear',font=('times new roman',12),width=10,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: clear_fields(empid_entry,name_entry,email_entry,gender_combobox,

@@ -1,11 +1,11 @@
 from tkinter import *
 from employee_db import employee_form 
 from time import strftime
-import datetime
+from supplier_db import supplier_form
 
 window=Tk()
 
-window.title('Inventory Management System')
+window.title('Inventory Management System') 
 window.geometry('1270x668+0+0')
 window.resizable(0,0)
 window.config(bg='white')
@@ -124,7 +124,8 @@ employee_button.bind('<Leave>', on_leave)
 supply_image=PhotoImage(file='supplier.png')
 supply_button=Button(leftframe,image=supply_image,compound=LEFT,text='  Supplier',font=('times new roman',18),anchor=W,
                      padx=10, # ADDED BACK padx
-                     bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+                     bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,
+                     command=lambda: supplier_form(window))
 supply_button.pack(fill=X,pady=10)
 supply_button.bind('<Enter>', on_enter)
 supply_button.bind('<Leave>', on_leave)
