@@ -223,7 +223,7 @@ def product_form(window):
     price_entry=Entry(left_frame,font=('times new roman',14),bg='lightyellow')
     price_entry.grid(row=3,column=1,pady=30)
     
-    quantity_label=Label(left_frame,text=' Category :',font=('times new roman',14,'bold'),bg='white')
+    quantity_label=Label(left_frame,text=' Quantity :',font=('times new roman',14,'bold'),bg='white')
     quantity_label.grid(row=4,column=0,padx=20,sticky='w')
     quantity_entry=Entry(left_frame,font=('times new roman',14),bg='lightyellow')
     quantity_entry.grid(row=4,column=1)

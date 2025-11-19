@@ -326,7 +326,7 @@ def employee_form(window):
     etyp_combobox.grid(row=2,column=1)
     etyp_combobox.set('Select Type')
     
-    education_options=['B.Tech','B.Com','BBA','MBA','M.Tech','M.Com','Diploma','High School','Other']
+    education_options=['BBA','BSC','MSC','Diploma','LLB','MBBS','Engg','SSC','HSC','Other']
     edu_label=Label(emp_details_frame,text='Education',font=('times new roman',12,'bold'),bg='white')
     edu_label.grid(row=2,column=2,sticky='w',padx=20,pady=10)
     edu_combobox=ttk.Combobox(emp_details_frame,font=('times new roman',12),values=education_options,state='readonly',cursor='hand2',width=18)

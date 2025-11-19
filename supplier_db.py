@@ -3,8 +3,14 @@ from tkinter import ttk
 from tkinter import messagebox
 from employee_db import connect_database
 
-
-def delete_supplier(invoice_entry,treeview):
+def clear_fields(invoice_entry,name_entry,contact_entry,description_entry):
+    invoice_entry.delete(0,END)
+    name_entry.delete(0,END)
+    contact_entry.delete(0,END)
+    description_entry.delete(1.0,END)
+    
+    
+def delete_supplier(invoice_entry,treeview,name_entry,contact_entry,description_entry):
     if invoice_entry=='':
         messagebox.showerror('Error','No row selected')
     else:
@@ -24,7 +30,7 @@ def delete_supplier(invoice_entry,treeview):
                     int(invoice_entry),
                 ))
                 connection.commit()
-
+                clear_fields(invoice_entry,name_entry,contact_entry,description_entry)
                 messagebox.showinfo('Success','Supplier deleted successfully')
 
                 treeview_data(treeview)
@@ -35,11 +41,7 @@ def delete_supplier(invoice_entry,treeview):
                 connection.close()
                 cursor.close()
 
-def clear_fields(invoice_entry,name_entry,contact_entry,description_entry):
-    invoice_entry.delete(0,END)
-    name_entry.delete(0,END)
-    contact_entry.delete(0,END)
-    description_entry.delete(1.0,END)
+
 
 def search_supplier(search_entry,treeview):
     if search_entry=='':
@@ -206,7 +208,7 @@ def supplier_form(window):
     update_button=Button(bottom_frame,text='Update',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: update_supplier(invoice_entry.get(),name_entry.get(),contact_entry.get(),description_entry.get(1.0,END).strip(),treeview))
     update_button.grid(row=0,column=1)
     
-    delete_button=Button(bottom_frame,text='Delete',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: delete_supplier(invoice_entry.get(),treeview))
+    delete_button=Button(bottom_frame,text='Delete',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: delete_supplier(invoice_entry.get(),treeview,name_entry,contact_entry,description_entry))
     delete_button.grid(row=0,column=2,padx=20)
     
     clear_button=Button(bottom_frame,text='Clear',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: clear_fields(invoice_entry,name_entry,contact_entry,description_entry))

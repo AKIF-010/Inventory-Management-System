@@ -4,13 +4,17 @@ from time import strftime
 from supplier_db import supplier_form
 from category_db import category_form
 from products_db import product_form
-
+from sales_db import sales_form
+from tkinter import messagebox
 Current_frame=None
 def show_form(form_function):
     global Current_frame
     if Current_frame:
         Current_frame.place_forget()
     Current_frame=form_function(window)
+
+def error():
+    messagebox.showinfo('Info','Under maintenance!!!')
 
 window=Tk()
 
@@ -91,7 +95,7 @@ except TclError:
 
 logout_button = Button(right_frame, text='Logout', font=('Arial', 12, 'bold'), 
                        bg=logout_button_bg, fg=logout_button_fg, bd=2, relief=RIDGE, 
-                       cursor='hand2', padx=10, pady=5)
+                       cursor='hand2', padx=10, pady=5,command=lambda: error())
 
 if logout_icon_image:
     logout_button.config(image=logout_icon_image, compound=LEFT, anchor=W, padx=5)
@@ -159,7 +163,7 @@ products_button.bind('<Leave>', on_leave)
 sales_image=PhotoImage(file='category.png')
 sales_button=Button(leftframe,image=sales_image,compound=LEFT,text='  Sales',font=('times new roman',18),anchor=W,
                     padx=10, # ADDED BACK padx
-                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(sales_form))
 sales_button.pack(fill=X,pady=10)
 sales_button.bind('<Enter>', on_enter)
 sales_button.bind('<Leave>', on_leave)
