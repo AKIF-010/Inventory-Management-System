@@ -401,3 +401,4 @@ def employee_form(window):
                                                        wshift_combobox,address_text,doj_date_entry,salary_entry,usertyp_combobox))
     
     create_database_table()
+    return employee_frame

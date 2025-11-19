@@ -167,3 +167,5 @@ def category_form(window):
     treeview_data(treeview)
     
     treeview.bind('<ButtonRelease-1>',lambda event: select_data(event,treeview,category_entry,name_entry,description_label))
+    
+    return category_frame

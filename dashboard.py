@@ -4,6 +4,14 @@ from time import strftime
 from supplier_db import supplier_form
 from category_db import category_form
 from products_db import product_form
+
+Current_frame=None
+def show_form(form_function):
+    global Current_frame
+    if Current_frame:
+        Current_frame.place_forget()
+    Current_frame=form_function(window)
+
 window=Tk()
 
 window.title('Inventory Management System')
@@ -118,7 +126,7 @@ active_bg_color = HOVER_BG
 employee_image=PhotoImage(file='employee1.png')
 employee_button=Button(leftframe,image=employee_image,compound=LEFT,text='  Employee',font=('times new roman',18),anchor=W,
                        padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: employee_form(window))
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(employee_form))
 employee_button.pack(fill=X,pady=10) 
 employee_button.bind('<Enter>', on_enter)
 employee_button.bind('<Leave>', on_leave)
@@ -127,7 +135,7 @@ supply_image=PhotoImage(file='supplier.png')
 supply_button=Button(leftframe,image=supply_image,compound=LEFT,text='  Supplier',font=('times new roman',18),anchor=W,
                      padx=10, # ADDED BACK padx
                      bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,
-                     command=lambda: supplier_form(window))
+                     command=lambda: show_form(supplier_form))
 supply_button.pack(fill=X,pady=10)
 supply_button.bind('<Enter>', on_enter)
 supply_button.bind('<Leave>', on_leave)
@@ -135,7 +143,7 @@ supply_button.bind('<Leave>', on_leave)
 category_image=PhotoImage(file='category.png')
 category_button=Button(leftframe,image=category_image,compound=LEFT,text='  Categories',font=('times new roman',18),anchor=W,
                        padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda:category_form(window))
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda:show_form(category_form))
 category_button.pack(fill=X,pady=10)
 category_button.bind('<Enter>', on_enter)
 category_button.bind('<Leave>', on_leave)
@@ -143,7 +151,7 @@ category_button.bind('<Leave>', on_leave)
 products_image=PhotoImage(file='product.png')
 products_button=Button(leftframe,image=products_image,compound=LEFT,text='  Products',font=('times new roman',18),anchor=W,
                        padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: product_form(window))
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(product_form))
 products_button.pack(fill=X,pady=10)
 products_button.bind('<Enter>', on_enter)
 products_button.bind('<Leave>', on_leave)
@@ -246,7 +254,7 @@ sales_frame.place(x=600, y=CARD_START_Y + 350, height=150, width=250)
 sales_frame.grid_propagate(False)
 
 total_sales_text = Label(sales_frame, text="Total Sales", 
-                       font=('times new roman', 12), fg='white', bg="#00B09E")
+                       font=('times new roman', 12), fg='white', bg="#00B09E") 
 total_sales_text.place(x=15, y=15)
 
 total_sales_count = Label(sales_frame, text="0", 

@@ -254,3 +254,5 @@ def supplier_form(window):
     treeview_data(treeview)
     
     treeview.bind('<ButtonRelease-1>', lambda event: select_data(event,invoice_entry,name_entry,contact_entry,description_entry)) 
+    
+    return supplier_frame
