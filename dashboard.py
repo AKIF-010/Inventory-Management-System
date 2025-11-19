@@ -2,10 +2,12 @@ from tkinter import *
 from employee_db import employee_form 
 from time import strftime
 from supplier_db import supplier_form
-
+from category_db import category_form
+from products_db import product_form
 window=Tk()
 
-window.title('Inventory Management System') 
+window.title('Inventory Management System')
+ 
 window.geometry('1270x668+0+0')
 window.resizable(0,0)
 window.config(bg='white')
@@ -133,7 +135,7 @@ supply_button.bind('<Leave>', on_leave)
 category_image=PhotoImage(file='category.png')
 category_button=Button(leftframe,image=category_image,compound=LEFT,text='  Categories',font=('times new roman',18),anchor=W,
                        padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda:category_form(window))
 category_button.pack(fill=X,pady=10)
 category_button.bind('<Enter>', on_enter)
 category_button.bind('<Leave>', on_leave)
@@ -141,7 +143,7 @@ category_button.bind('<Leave>', on_leave)
 products_image=PhotoImage(file='product.png')
 products_button=Button(leftframe,image=products_image,compound=LEFT,text='  Products',font=('times new roman',18),anchor=W,
                        padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: product_form(window))
 products_button.pack(fill=X,pady=10)
 products_button.bind('<Enter>', on_enter)
 products_button.bind('<Leave>', on_leave)
@@ -157,7 +159,7 @@ sales_button.bind('<Leave>', on_leave)
 exit_image=PhotoImage(file='exit.png')
 exit_button=Button(leftframe,image=exit_image,compound=LEFT,text='  Exit',font=('times new roman',18),anchor=W,
                     padx=10, # ADDED BACK padx
-                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color)
+                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color, command=window.destroy)
 exit_button.pack(fill=X,pady=10)
 exit_button.bind('<Enter>', on_enter)
 exit_button.bind('<Leave>', on_leave)

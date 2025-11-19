@@ -3,6 +3,100 @@ from tkinter import ttk
 from tkinter import messagebox
 from employee_db import connect_database
 
+
+def delete_supplier(invoice_entry,treeview):
+    if invoice_entry=='':
+        messagebox.showerror('Error','No row selected')
+    else:
+        messagebox_result=messagebox.askyesno('Confirm','Do you really want to delete this record?')
+        if messagebox_result:
+            cursor,connection=connect_database()
+            if not cursor or not connection:
+                return
+            try:
+                cursor.execute('use inventory_management_system')
+                cursor.execute('Select * from supplier_data where invoice_no=%s',invoice_entry)
+                if not cursor.fetchone() :
+                    messagebox.showerror('Error','Invalid Invoice number')
+                    return
+
+                cursor.execute('DELETE FROM supplier_data where invoice_no=%s',(
+                    int(invoice_entry),
+                ))
+                connection.commit()
+
+                messagebox.showinfo('Success','Supplier deleted successfully')
+
+                treeview_data(treeview)
+            except Exception as e:
+                messagebox.showerror('Error',f'Error due to : {str(e)}')
+
+            finally:
+                connection.close()
+                cursor.close()
+
+def clear_fields(invoice_entry,name_entry,contact_entry,description_entry):
+    invoice_entry.delete(0,END)
+    name_entry.delete(0,END)
+    contact_entry.delete(0,END)
+    description_entry.delete(1.0,END)
+
+def search_supplier(search_entry,treeview):
+    if search_entry=='':
+        messagebox.showerror('Error','Invoice number is required for search')
+    else:
+        cursor,connection=connect_database()
+        if not cursor or not connection:
+            return
+        
+        try:
+            cursor.execute('use inventory_management_system')
+            cursor.execute('Select * from supplier_data where invoice_no=%s',search_entry)
+            record=cursor.fetchone()
+            treeview.delete(*treeview.get_children())
+            treeview.insert('',END,values=record)
+        except Exception as e:
+            messagebox.showerror('Error',f'Error due to : {str(e)}')
+        finally:
+            connection.close()
+            cursor.close()
+def show_all_suppliers(treeview,search_entry):
+    treeview_data(treeview)
+    search_entry.delete(0,END)
+    
+ 
+def update_supplier(invoice_entry,name_entry,contact_entry,description_entry,treeview):
+    if invoice_entry=='' or name_entry=='' or contact_entry=='' or description_entry=='':
+        messagebox.showerror('Error','No row selected')
+    else:
+        cursor,connection=connect_database()
+        if not cursor or not connection:
+            return
+        try:
+            cursor.execute('use inventory_management_system')
+            cursor.execute('Select * from supplier_data where invoice_no=%s',invoice_entry)
+            if not cursor.fetchone() :
+                messagebox.showerror('Error','Invalid Invoice number')
+                return
+            
+            cursor.execute('UPDATE supplier_data SET name=%s,contact=%s,description=%s where invoice_no=%s',(
+                name_entry,
+                contact_entry,
+                description_entry,
+                int(invoice_entry)
+            ))
+            connection.commit()
+
+            messagebox.showinfo('Success','Supplier updated successfully')
+
+            treeview_data(treeview)
+        except Exception as e:
+            messagebox.showerror('Error',f'Error due to : {str(e)}')
+        
+        finally:
+            connection.close()
+            cursor.close()
+    
 def select_data(event,invoice_entry,name_entry,contact_entry,description_entry):
     selected_row=event.widget.focus()
     data=event.widget.item(selected_row)
@@ -36,7 +130,7 @@ def treeview_data(treeview):
         
         
 def add_supplier(invoice_entry,name_entry,contact_entry,description_entry,treeview):
-    if invoice_entry=='' or name_entry=='' or contact_entry=='' or description_entry.strip()=='':
+    if invoice_entry=='' or name_entry=='' or contact_entry=='' or description_entry=='':
         messagebox.showerror('Error','All fields are required')
     else:
         cursor,connection=connect_database()
@@ -55,7 +149,7 @@ def add_supplier(invoice_entry,name_entry,contact_entry,description_entry,treevi
                 int(invoice_entry),
                 name_entry,
                 contact_entry,
-                description_entry.strip()
+                description_entry
             ))
             connection.commit()
 
@@ -68,9 +162,9 @@ def add_supplier(invoice_entry,name_entry,contact_entry,description_entry,treevi
         finally:
             connection.close()
             cursor.close()
-def supplier_form(windo):
+def supplier_form(window):
     global back_image
-    supplier_frame=Frame(windo,width=1070,height=598,bg='white')
+    supplier_frame=Frame(window,width=1070,height=598,bg='white')
     supplier_frame.place(x=200,y=71)
     heading_label=Label(supplier_frame,text='Manage Supplier Details',font=('times new roman',16,'bold'),bg="#0f4d7d",fg='white')
     heading_label.place(x=0,y=0,relwidth=1)
@@ -106,16 +200,16 @@ def supplier_form(windo):
     bottom_frame=Frame(left_frame,bg='white')
     bottom_frame.grid(row=4,columnspan=2,pady=10)
     
-    add_button=Button(bottom_frame,text='Add',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: add_supplier(invoice_entry.get(),name_entry.get(),contact_entry.get(),description_entry.get(1.0,END),treeview))
+    add_button=Button(bottom_frame,text='Add',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: add_supplier(invoice_entry.get(),name_entry.get(),contact_entry.get(),description_entry.get(1.0,END).strip(),treeview))
     add_button.grid(row=0,column=0,padx=20)
     
-    update_button=Button(bottom_frame,text='Update',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d')
+    update_button=Button(bottom_frame,text='Update',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: update_supplier(invoice_entry.get(),name_entry.get(),contact_entry.get(),description_entry.get(1.0,END).strip(),treeview))
     update_button.grid(row=0,column=1)
     
-    delete_button=Button(bottom_frame,text='Delete',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d')
+    delete_button=Button(bottom_frame,text='Delete',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: delete_supplier(invoice_entry.get(),treeview))
     delete_button.grid(row=0,column=2,padx=20)
     
-    clear_button=Button(bottom_frame,text='Clear',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d')
+    clear_button=Button(bottom_frame,text='Clear',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: clear_fields(invoice_entry,name_entry,contact_entry,description_entry))
     clear_button.grid(row=0,column=3)
     
     right_frame=Frame(supplier_frame,bg='white')
@@ -130,10 +224,10 @@ def supplier_form(windo):
     search_entry=Entry(search_frame,font=('times new roman',14),bg='lightyellow')
     search_entry.grid(row=0,column=1)
     
-    searth_button=Button(search_frame,text='Search',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d')
+    searth_button=Button(search_frame,text='Search',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: search_supplier(search_entry.get(),treeview))
     searth_button.grid(row=0,column=2,padx=20)
     
-    show_button=Button(search_frame,text='Show All',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d')
+    show_button=Button(search_frame,text='Show All',font=('times new roman',14),width=8,cursor='hand2',fg='white',bg='#0f4d7d',command=lambda: show_all_suppliers(treeview,search_entry))
     show_button.grid(row=0,column=3)
     
     
