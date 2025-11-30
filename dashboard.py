@@ -6,12 +6,71 @@ from category_db import category_form
 from products_db import product_form
 from sales_db import sales_form
 from tkinter import messagebox
+from employee_db import connect_database
+
+
 Current_frame=None
 def show_form(form_function):
     global Current_frame
     if Current_frame:
         Current_frame.place_forget()
     Current_frame=form_function(window)
+
+def update():
+    cursor,connection=connect_database()
+    if cursor is None and connection is None:
+            return
+    cursor.execute('USE inventory_management_system')
+    
+    cursor.execute('Select * from employee_data')
+    records=cursor.fetchall()
+    total_emp_count.config(text=len(records))
+    
+    cursor.execute('Select * from supplier_data')
+    records=cursor.fetchall()
+    total_supplier_count.config(text=len(records))
+    
+    cursor.execute('Select * from category_data')
+    records=cursor.fetchall()
+    total_category_count.config(text=len(records))
+    
+    cursor.execute('Select * from product_data')
+    records=cursor.fetchall()
+    total_product_count.config(text=len(records))
+    
+
+def tax_window():
+    def save_tax():
+            value=tax_count.get()
+            cursor,connection=connect_database()
+            if not cursor or not connection:
+                return
+            cursor.execute('use inventory_management_system')
+            cursor.execute('create table IF NOT EXISTS tax_data(id INT primary key, tax DECIMAL(5,2))')
+            cursor.execute('select id from tax_data where id=1')
+            if cursor.fetchone():
+                cursor.execute('UPDATE tax_data SET tax=%s WHERE id=1',value)
+            else:
+                cursor.execute('INSERT INTO tax_data(id , tax) values(1,%s)',value)
+            connection.commit()
+            messagebox.showinfo('Success',f'{value}% tax added Succesfully')
+            connection.close()
+            cursor.close()
+    tax_root=Toplevel()
+    tax_root.title('Enter Tax Percentage')
+    tax_root.geometry('400x200+300+200')
+    tax_root.resizable(0,0)
+    tax_root.grab_set()
+    tax_per=Label(tax_root,text='Enter Tax Percentage(%)',font=('times new roman',14))
+    tax_per.pack(pady=20)
+    
+    tax_count=Spinbox(tax_root,from_=0,to=100,font=('times new roman',14))
+    tax_count.pack(pady=(0,20))
+    
+    button_frame=Frame(tax_root)
+    button_frame.pack()
+    save_button=Button(button_frame,text='Save',font=('times new roman',12),bg='#4caf50',fg='white',cursor='hand2',width=8,command=lambda: save_tax())
+    save_button.grid(row=0,column=0)
 
 def error():
     messagebox.showinfo('Info','Under maintenance!!!')
@@ -168,10 +227,19 @@ sales_button.pack(fill=X,pady=10)
 sales_button.bind('<Enter>', on_enter)
 sales_button.bind('<Leave>', on_leave)
 
+tax_image=PhotoImage(file='taxes.png')
+tax_button=Button(leftframe,image=tax_image,compound=LEFT,text='  Tax',font=('times new roman',18),anchor=W,
+               padx=10, # ADDED BACK padx
+               bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=tax_window)
+tax_button.pack(fill=X,pady=10)
+tax_button.bind('<Enter>', on_enter)
+tax_button.bind('<Leave>', on_leave)
+
+
 exit_image=PhotoImage(file='exit.png')
 exit_button=Button(leftframe,image=exit_image,compound=LEFT,text='  Exit',font=('times new roman',18),anchor=W,
                     padx=10, # ADDED BACK padx
-                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color, command=window.destroy)
+                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color, command=lambda:exit())
 exit_button.pack(fill=X,pady=10)
 exit_button.bind('<Enter>', on_enter)
 exit_button.bind('<Leave>', on_leave)
@@ -269,5 +337,5 @@ total_sales_image = PhotoImage(file='sale.png')
 total_sales_label = Label(sales_frame, image=total_sales_image, bg="#00B09E")
 total_sales_label.image = total_sales_image
 total_sales_label.place(relx=0.9, rely=0.55, anchor=E)
-
+update()
 window.mainloop()
