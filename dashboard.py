@@ -1,341 +1,170 @@
 from tkinter import *
-from employee_db import employee_form 
 from time import strftime
+from tkinter import messagebox
+from employee_db import employee_form, connect_database
 from supplier_db import supplier_form
 from category_db import category_form
 from products_db import product_form
 from sales_db import sales_form
-from tkinter import messagebox
-from employee_db import connect_database
 
+Current_frame = None
 
-Current_frame=None
 def show_form(form_function):
     global Current_frame
     if Current_frame:
         Current_frame.place_forget()
-    Current_frame=form_function(window)
+    Current_frame = form_function(window)
 
-def update():
-    cursor,connection=connect_database()
-    if cursor is None and connection is None:
+def open_dashboard(employee_name="Admin"):
+    global window, total_emp_count, total_supplier_count, total_category_count, total_product_count, total_sales_count
+
+    window = Tk()
+    window.title('Inventory Management System')
+    window.geometry('1270x668+0+0')
+    window.resizable(0,0)
+    window.config(bg='white')
+
+    HEADER_HEIGHT = 70
+    MENU_WIDTH = 200
+    HEADER_WIDTH = 1270 - MENU_WIDTH
+    CARD_START_Y = 155
+
+    ORIGINAL_BG = '#1D293D'
+    HOVER_BG = '#155DFC'
+
+    def on_enter(event):
+        event.widget.config(bg=HOVER_BG)
+    def on_leave(event):
+        event.widget.config(bg=ORIGINAL_BG)
+
+    # --- Top Frame ---
+    top_frame = Frame(window, bg='white', height=HEADER_HEIGHT, width=HEADER_WIDTH)
+    top_frame.place(x=MENU_WIDTH, y=0)
+    top_frame.grid_propagate(False)
+
+    welcome_label = Label(top_frame, text=f'Welcome, {employee_name}', font=('Tahoma', 16), bg='white', fg='black', anchor=W)
+    welcome_label.grid(row=0, column=0, sticky=W, padx=10, pady=5)
+
+    date_label = Label(top_frame, font=('Verdana', 13), bg='white', fg='black', anchor=W)
+    date_label.grid(row=1, column=0, sticky=W, padx=10)
+
+    def update_time():
+        current_time = strftime('%I:%M:%S %p')
+        current_date = strftime('%d-%m-%Y')
+        date_label.config(text=f"Date: {current_date}      Time: {current_time}")
+        date_label.after(1000, update_time)
+
+    update_time()
+
+    # --- Left Menu ---
+    leftframe = Frame(window, bg=ORIGINAL_BG)
+    leftframe.place(x=0, y=0, relheight=1, width=200)
+
+    manu_image = PhotoImage(file='inventory.png')
+    manu = Label(leftframe, image=manu_image, compound=LEFT, text=' IMS PRO',
+                 font=('times new roman',20), bg=ORIGINAL_BG, fg='white', anchor=W, padx=10, height=70, width=200)
+    manu.pack(fill=X)
+
+    active_bg_color = HOVER_BG
+
+    # --- Menu Buttons ---
+    def create_menu_button(parent, img_file, text, command):
+        img = PhotoImage(file=img_file)
+        btn = Button(parent, image=img, compound=LEFT, text=f' {text}', font=('times new roman',18), anchor=W,
+                     padx=10, bd=0, bg=ORIGINAL_BG, fg='white', cursor='hand2', activebackground=active_bg_color,
+                     command=command)
+        btn.image = img
+        btn.pack(fill=X, pady=10)
+        btn.bind('<Enter>', on_enter)
+        btn.bind('<Leave>', on_leave)
+        return btn
+
+    create_menu_button(leftframe, 'employee1.png', 'Employee', lambda: show_form(employee_form))
+    create_menu_button(leftframe, 'supplier.png', 'Supplier', lambda: show_form(supplier_form))
+    create_menu_button(leftframe, 'category.png', 'Categories', lambda: show_form(category_form))
+    create_menu_button(leftframe, 'product.png', 'Products', lambda: show_form(product_form))
+    create_menu_button(leftframe, 'category.png', 'Sales', lambda: show_form(sales_form))
+    create_menu_button(leftframe, 'taxes.png', 'Tax', lambda: tax_window())
+    create_menu_button(leftframe, 'exit.png', 'Exit', lambda: window.destroy())
+
+    # --- Dashboard Cards ---
+    def create_card(x, y, color, title, var, img_file):
+        frame = Frame(window, bg=color, bd=0)
+        frame.place(x=x, y=y, height=150, width=250)
+        Label(frame, text=title, font=('times new roman', 12), fg='white', bg=color).place(x=15, y=15)
+        Label(frame, textvariable=var, font=('times new roman', 40, 'bold'), fg='white', bg=color).place(x=15, y=50)
+        img = PhotoImage(file=img_file)
+        lbl = Label(frame, image=img, bg=color)
+        lbl.image = img
+        lbl.place(relx=0.9, rely=0.55, anchor=E)
+        return frame
+
+    total_emp_count = StringVar(value="0")
+    total_supplier_count = StringVar(value="0")
+    total_category_count = StringVar(value="0")
+    total_product_count = StringVar(value="0")
+    total_sales_count = StringVar(value="0")  # static (no sales table)
+
+    create_card(400, CARD_START_Y, "#3A78F2", "Total Employees", total_emp_count, "employee1.png")
+    create_card(800, CARD_START_Y, "#7030A0", "Total Suppliers", total_supplier_count, "supplier.png")
+    create_card(400, CARD_START_Y + 175, "#008000", "Total Categories", total_category_count, "category.png")
+    create_card(800, CARD_START_Y + 175, "#FF4500", "Total Products", total_product_count, "product.png")
+    create_card(600, CARD_START_Y + 350, "#00B09E", "Total Sales", total_sales_count, "sale.png")  # static
+
+    # --- Update counts ---
+    def update():
+        cursor, connection = connect_database()
+        if not cursor or not connection:
             return
-    cursor.execute('USE inventory_management_system')
-    
-    cursor.execute('Select * from employee_data')
-    records=cursor.fetchall()
-    total_emp_count.config(text=len(records))
-    
-    cursor.execute('Select * from supplier_data')
-    records=cursor.fetchall()
-    total_supplier_count.config(text=len(records))
-    
-    cursor.execute('Select * from category_data')
-    records=cursor.fetchall()
-    total_category_count.config(text=len(records))
-    
-    cursor.execute('Select * from product_data')
-    records=cursor.fetchall()
-    total_product_count.config(text=len(records))
-    
+        cursor.execute("USE inventory_management_system")
 
-def tax_window():
-    def save_tax():
-            value=tax_count.get()
-            cursor,connection=connect_database()
+        cursor.execute("SELECT * FROM employee_data")
+        total_emp_count.set(str(len(cursor.fetchall())))
+
+        cursor.execute("SELECT * FROM supplier_data")
+        total_supplier_count.set(str(len(cursor.fetchall())))
+
+        cursor.execute("SELECT * FROM category_data")
+        total_category_count.set(str(len(cursor.fetchall())))
+
+        cursor.execute("SELECT * FROM product_data")
+        total_product_count.set(str(len(cursor.fetchall())))
+
+        cursor.close()
+        connection.close()
+
+    update()
+
+    # --- Tax Window ---
+    def tax_window():
+        def save_tax():
+            value = tax_count.get()
+            cursor, connection = connect_database()
             if not cursor or not connection:
                 return
-            cursor.execute('use inventory_management_system')
-            cursor.execute('create table IF NOT EXISTS tax_data(id INT primary key, tax DECIMAL(5,2))')
-            cursor.execute('select id from tax_data where id=1')
+            cursor.execute('USE inventory_management_system')
+            cursor.execute('CREATE TABLE IF NOT EXISTS tax_data(id INT PRIMARY KEY, tax DECIMAL(5,2))')
+            cursor.execute('SELECT id FROM tax_data WHERE id=1')
             if cursor.fetchone():
-                cursor.execute('UPDATE tax_data SET tax=%s WHERE id=1',value)
+                cursor.execute('UPDATE tax_data SET tax=%s WHERE id=1', (value,))
             else:
-                cursor.execute('INSERT INTO tax_data(id , tax) values(1,%s)',value)
+                cursor.execute('INSERT INTO tax_data(id, tax) VALUES(1, %s)', (value,))
             connection.commit()
-            messagebox.showinfo('Success',f'{value}% tax added Succesfully')
+            messagebox.showinfo('Success', f'{value}% tax added successfully!')
             connection.close()
             cursor.close()
-    tax_root=Toplevel()
-    tax_root.title('Enter Tax Percentage')
-    tax_root.geometry('400x200+300+200')
-    tax_root.resizable(0,0)
-    tax_root.grab_set()
-    tax_per=Label(tax_root,text='Enter Tax Percentage(%)',font=('times new roman',14))
-    tax_per.pack(pady=20)
-    
-    tax_count=Spinbox(tax_root,from_=0,to=100,font=('times new roman',14))
-    tax_count.pack(pady=(0,20))
-    
-    button_frame=Frame(tax_root)
-    button_frame.pack()
-    save_button=Button(button_frame,text='Save',font=('times new roman',12),bg='#4caf50',fg='white',cursor='hand2',width=8,command=lambda: save_tax())
-    save_button.grid(row=0,column=0)
 
-def error():
-    messagebox.showinfo('Info','Under maintenance!!!')
+        tax_root = Toplevel()
+        tax_root.title('Enter Tax Percentage')
+        tax_root.geometry('400x200+300+200')
+        tax_root.resizable(0,0)
+        tax_root.grab_set()
 
-window=Tk()
+        Label(tax_root, text='Enter Tax Percentage (%)', font=('times new roman',14)).pack(pady=20)
+        tax_count = Spinbox(tax_root, from_=0, to=100, font=('times new roman',14))
+        tax_count.pack(pady=(0,20))
 
-window.title('Inventory Management System')
- 
-window.geometry('1270x668+0+0')
-window.resizable(0,0)
-window.config(bg='white')
+        Button(tax_root, text='Save', font=('times new roman',12), bg='#4caf50', fg='white',
+               cursor='hand2', width=8, command=save_tax).pack()
 
-HEADER_HEIGHT = 70
-MENU_WIDTH = 200
-HEADER_WIDTH = 1270 - MENU_WIDTH
-
-# --- Position Constants ---
-HEADER_BOTTOM_Y = HEADER_HEIGHT + 1 
-DASHBOARD_TITLE_Y = HEADER_BOTTOM_Y + 15 
-CARD_START_Y = DASHBOARD_TITLE_Y + 70 
-
-# --- Hover Colors ---
-ORIGINAL_BG = '#1D293D'
-HOVER_BG = '#155DFC'
-
-# --- Hover Event Functions ---
-def on_enter(event):
-    # Changes the button's background to HOVER_BG when the cursor enters
-    event.widget.config(bg=HOVER_BG)
-
-def on_leave(event):
-    # Changes the button's background back to ORIGINAL_BG when the cursor leaves
-    event.widget.config(bg=ORIGINAL_BG)
-
-
-# --- Top Header Frame ---
-top_frame = Frame(window, bg='white', height=HEADER_HEIGHT, width=HEADER_WIDTH)
-top_frame.place(x=MENU_WIDTH, y=0)
-top_frame.grid_propagate(False)
-
-top_border = Frame(window, bg="#E5E7EB", height=1, width=HEADER_WIDTH)
-top_border.place(x=MENU_WIDTH, y=HEADER_HEIGHT)
-
-top_frame.columnconfigure(0, weight=1)
-top_frame.columnconfigure(1, weight=0)
-top_frame.rowconfigure(0, weight=1)
-
-# Left section (Welcome and Date/Time)
-left_frame = Frame(top_frame, bg='white')
-left_frame.grid(row=0, column=0, sticky="w", padx=10, pady=5)
-
-welcome_label = Label(left_frame, text='Welcome, Admin', font=('Tahoma', 16), bg='white', fg='black', anchor=W)
-welcome_label.grid(row=0, column=0, sticky=W)
-
-date_label = Label(left_frame, font=('Verdana', 13), bg='white', fg='black', anchor=W)
-date_label.grid(row=1, column=0, sticky=W)
-
-def update_time():
-    current_time = strftime('%I:%M:%S %p')
-    current_date = strftime('%d-%m-%Y')
-    date_label.config(text=f"Date: {current_date}      Time: {current_time}")
-    date_label.after(1000, update_time)
-
-update_time()
-
-# Right section (Logout Button - Vertically Centered)
-right_frame = Frame(top_frame, bg='white')
-right_frame.grid(row=0, column=1, sticky="nse", padx=20) 
-right_frame.columnconfigure(0, weight=1)
-right_frame.rowconfigure(0, weight=1)
-
-# --- UPDATED LOGOUT BUTTON DESIGN (Kept) ---
-logout_button_bg = '#E8F5E9' 
-logout_button_fg = '#008C73' 
-
-try:
-    logout_icon_image = PhotoImage(file='logout_icon.png')
-except TclError:
-    print("Warning: 'logout_icon.png' not found. Using text-only logout button.")
-    logout_icon_image = None
-
-logout_button = Button(right_frame, text='Logout', font=('Arial', 12, 'bold'), 
-                       bg=logout_button_bg, fg=logout_button_fg, bd=2, relief=RIDGE, 
-                       cursor='hand2', padx=10, pady=5,command=lambda: error())
-
-if logout_icon_image:
-    logout_button.config(image=logout_icon_image, compound=LEFT, anchor=W, padx=5)
-    logout_button.image = logout_icon_image 
-
-logout_button.grid(row=0, column=0, sticky="") 
-# ------------------------------------
-
-
-# --- DASHBOARD OVERVIEW TITLE SECTION ---
-dashboard_title = Label(window, text="Dashboard Overview", font=("Arial", 20, "bold"), fg='#333333', bg='white', anchor=W)
-dashboard_title.place(x=MENU_WIDTH + 20, y=DASHBOARD_TITLE_Y + 10) 
-# ---------------------------------------------
-
-
-# --- Left Menu Frame ---
-leftframe = Frame(window,bg=ORIGINAL_BG) 
-leftframe.place(x=0,y=0,relheight=1,width=200)
-
-manu_image=PhotoImage(file='inventory.png')
-# This Label keeps padx=10
-manu=Label(leftframe,image=manu_image,compound=LEFT,text='  IMS PRO',font=('times new roman',20), bg=ORIGINAL_BG,fg='white',anchor=W,padx=10,height=70,width=200)
-manu.pack(fill=X)
-
-border = Frame(leftframe, bg=HOVER_BG, height=1, width=200)
-border.place(x=0,y=70)
-
-active_bg_color = HOVER_BG 
-
-# --- Menu Buttons with Hover Binding (padx=10 ADDED BACK, height removed) ---
-
-employee_image=PhotoImage(file='employee1.png')
-employee_button=Button(leftframe,image=employee_image,compound=LEFT,text='  Employee',font=('times new roman',18),anchor=W,
-                       padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(employee_form))
-employee_button.pack(fill=X,pady=10) 
-employee_button.bind('<Enter>', on_enter)
-employee_button.bind('<Leave>', on_leave)
-
-supply_image=PhotoImage(file='supplier.png')
-supply_button=Button(leftframe,image=supply_image,compound=LEFT,text='  Supplier',font=('times new roman',18),anchor=W,
-                     padx=10, # ADDED BACK padx
-                     bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,
-                     command=lambda: show_form(supplier_form))
-supply_button.pack(fill=X,pady=10)
-supply_button.bind('<Enter>', on_enter)
-supply_button.bind('<Leave>', on_leave)
-
-category_image=PhotoImage(file='category.png')
-category_button=Button(leftframe,image=category_image,compound=LEFT,text='  Categories',font=('times new roman',18),anchor=W,
-                       padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda:show_form(category_form))
-category_button.pack(fill=X,pady=10)
-category_button.bind('<Enter>', on_enter)
-category_button.bind('<Leave>', on_leave)
-
-products_image=PhotoImage(file='product.png')
-products_button=Button(leftframe,image=products_image,compound=LEFT,text='  Products',font=('times new roman',18),anchor=W,
-                       padx=10, # ADDED BACK padx
-                       bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(product_form))
-products_button.pack(fill=X,pady=10)
-products_button.bind('<Enter>', on_enter)
-products_button.bind('<Leave>', on_leave)
-
-sales_image=PhotoImage(file='category.png')
-sales_button=Button(leftframe,image=sales_image,compound=LEFT,text='  Sales',font=('times new roman',18),anchor=W,
-                    padx=10, # ADDED BACK padx
-                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=lambda: show_form(sales_form))
-sales_button.pack(fill=X,pady=10)
-sales_button.bind('<Enter>', on_enter)
-sales_button.bind('<Leave>', on_leave)
-
-tax_image=PhotoImage(file='taxes.png')
-tax_button=Button(leftframe,image=tax_image,compound=LEFT,text='  Tax',font=('times new roman',18),anchor=W,
-               padx=10, # ADDED BACK padx
-               bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color,command=tax_window)
-tax_button.pack(fill=X,pady=10)
-tax_button.bind('<Enter>', on_enter)
-tax_button.bind('<Leave>', on_leave)
-
-
-exit_image=PhotoImage(file='exit.png')
-exit_button=Button(leftframe,image=exit_image,compound=LEFT,text='  Exit',font=('times new roman',18),anchor=W,
-                    padx=10, # ADDED BACK padx
-                    bd=0,bg=ORIGINAL_BG,fg='white', cursor='hand2', activebackground=active_bg_color, command=lambda:exit())
-exit_button.pack(fill=X,pady=10)
-exit_button.bind('<Enter>', on_enter)
-exit_button.bind('<Leave>', on_leave)
-
-
-#frames
-
-# --- Employee Frame ---
-emp_frame = Frame(window, bg="#3A78F2", bd=0)
-emp_frame.place(x=400, y=CARD_START_Y, height=150, width=250)
-emp_frame.grid_propagate(False)
-
-total_emp_text = Label(emp_frame, text="Total Employees", 
-                       font=('times new roman', 12), fg='white', bg="#3A78F2")
-total_emp_text.place(x=15, y=15)
-
-total_emp_count = Label(emp_frame, text="0", 
-                         font=('times new roman', 40, 'bold'), fg='white', bg="#3A78F2")
-total_emp_count.place(x=15, y=50)
-
-total_emp_image = PhotoImage(file='employee1.png')
-total_emp_label = Label(emp_frame, image=total_emp_image, bg="#3A78F2")
-total_emp_label.image = total_emp_image
-total_emp_label.place(relx=0.9, rely=0.55, anchor=E)
-
-# --- Supplier Frame ---
-supplier_frame = Frame(window, bg="#7030A0", bd=0)
-supplier_frame.place(x=800, y=CARD_START_Y, height=150, width=250)
-supplier_frame.grid_propagate(False)
-
-total_supplier_text = Label(supplier_frame, text="Total Suppliers", 
-                       font=('times new roman', 12), fg='white', bg="#7030A0")
-total_supplier_text.place(x=15, y=15)
-
-total_supplier_count = Label(supplier_frame, text="0", 
-                         font=('times new roman', 40, 'bold'), fg='white', bg="#7030A0")
-total_supplier_count.place(x=15, y=50)
-
-total_supplier_image = PhotoImage(file='supplier.png')
-total_supplier_label = Label(supplier_frame, image=total_supplier_image, bg="#7030A0")
-total_supplier_label.image = total_supplier_image
-total_supplier_label.place(relx=0.9, rely=0.55, anchor=E)
-
-# --- Category Frame ---
-# Adjusted Y for second row, factoring in CARD_START_Y and a gap (e.g., 175px total offset)
-category_frame = Frame(window, bg="#008000", bd=0)
-category_frame.place(x=400, y=CARD_START_Y + 175, height=150, width=250) 
-category_frame.grid_propagate(False)
-
-total_category_text = Label(category_frame, text="Total Categories", 
-                       font=('times new roman', 12), fg='white', bg="#008000")
-total_category_text.place(x=15, y=15)
-
-total_category_count = Label(category_frame, text="0", 
-                         font=('times new roman', 40, 'bold'), fg='white', bg="#008000")
-total_category_count.place(x=15, y=50)
-
-total_category_image = PhotoImage(file='category.png')
-total_category_label = Label(category_frame, image=total_category_image, bg="#008000")
-total_category_label.image = total_category_image
-total_category_label.place(relx=0.9, rely=0.55, anchor=E)
-
-# --- Product Frame ---
-product_frame = Frame(window, bg="#FF4500", bd=0)
-product_frame.place(x=800, y=CARD_START_Y + 175, height=150, width=250)
-product_frame.grid_propagate(False)
-
-total_product_text = Label(product_frame, text="Total Products", 
-                       font=('times new roman', 12), fg='white', bg="#FF4500")
-total_product_text.place(x=15, y=15)
-
-total_product_count = Label(product_frame, text="0", 
-                         font=('times new roman', 40, 'bold'), fg='white', bg="#FF4500")
-total_product_count.place(x=15, y=50)
-
-total_product_image = PhotoImage(file='product.png')
-total_product_label = Label(product_frame, image=total_product_image, bg="#FF4500")
-total_product_label.image = total_product_image
-total_product_label.place(relx=0.9, rely=0.55, anchor=E)
-
-# --- Sales Frame ---
-sales_frame = Frame(window, bg="#00B09E", bd=0)
-sales_frame.place(x=600, y=CARD_START_Y + 350, height=150, width=250)
-sales_frame.grid_propagate(False)
-
-total_sales_text = Label(sales_frame, text="Total Sales", 
-                       font=('times new roman', 12), fg='white', bg="#00B09E") 
-total_sales_text.place(x=15, y=15)
-
-total_sales_count = Label(sales_frame, text="0", 
-                         font=('times new roman', 40, 'bold'), fg='white', bg="#00B09E")
-total_sales_count.place(x=15, y=50)
-
-total_sales_image = PhotoImage(file='sale.png')
-total_sales_label = Label(sales_frame, image=total_sales_image, bg="#00B09E")
-total_sales_label.image = total_sales_image
-total_sales_label.place(relx=0.9, rely=0.55, anchor=E)
-update()
-window.mainloop()
+    window.mainloop()
