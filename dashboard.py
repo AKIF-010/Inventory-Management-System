@@ -7,6 +7,7 @@ from category_db import category_form
 from products_db import product_form
 from sales_db import sales_form
 
+
 Current_frame = None
 
 def show_form(form_function):
@@ -135,6 +136,14 @@ def open_dashboard(employee_name="Admin"):
 
     update()
 
+    # --- Auto-refresh dashboard counts ---
+    def refresh_counts():
+        update()  # Call the update function to refresh all counts
+        window.after(3000, refresh_counts)  # Repeat every 3 seconds
+    
+    refresh_counts()  # Start auto-refreshing
+
+    
     # --- Tax Window ---
     def tax_window():
         def save_tax():
@@ -166,5 +175,5 @@ def open_dashboard(employee_name="Admin"):
 
         Button(tax_root, text='Save', font=('times new roman',12), bg='#4caf50', fg='white',
                cursor='hand2', width=8, command=save_tax).pack()
-
+    
     window.mainloop()

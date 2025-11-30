@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
-from employee_db import connect_database  # Your database functions
-from dashboard import open_dashboard      # Function to open dashboard after login
+from employee_db import connect_database
+from dashboard import open_dashboard
 
 def login_window():
     def check_login():
@@ -30,31 +30,55 @@ def login_window():
 
         if result and result[1] == password:
             messagebox.showinfo("Success", f"Welcome {result[0]}!")
-            root.destroy()  # Close login window
-            open_dashboard(result[0])  # Pass employee name to dashboard
+            root.destroy()
+            open_dashboard(result[0])
         else:
             messagebox.showerror("Error", "Invalid Employee ID or Password")
 
+    # --- Main Window ---
     root = Tk()
     root.title("Employee Login")
-    root.geometry("400x250+500+200")
+    root.geometry("500x350+480+180")
     root.resizable(0, 0)
-    root.config(bg="white")
+    root.config(bg="#e6ecf0")
 
-    Label(root, text="Employee Login", font=("Arial", 16, "bold"), bg="white").pack(pady=10)
+    # --- Center Card Frame ---
+    card_frame = Frame(root, bg="white", bd=0, highlightthickness=2, highlightbackground="#d1d9e6")
+    card_frame.place(relx=0.5, rely=0.5, anchor=CENTER, width=400, height=300)
 
-    Label(root, text="Employee ID:", bg="white", font=("Arial", 12)).pack(pady=5)
-    empid_entry = Entry(root, font=("Arial", 12))
-    empid_entry.pack(pady=5)
+    # Title
+    Label(card_frame, text="Login", font=("Helvetica", 18, "bold"), bg="white", fg="#2c3e50").pack(pady=(20,10))
 
-    Label(root, text="Password:", bg="white", font=("Arial", 12)).pack(pady=5)
-    password_entry = Entry(root, font=("Arial", 12), show="*")
-    password_entry.pack(pady=5)
+    # Employee ID
+    Label(card_frame, text="ID", font=("Helvetica", 12), bg="white", anchor=W).pack(fill=X, padx=40, pady=(10,0))
+    empid_entry = Entry(card_frame, font=("Helvetica", 12), bd=1, relief=SOLID)
+    empid_entry.pack(fill=X, padx=40, pady=5)
 
-    Button(root, text="Login", font=("Arial", 12), bg="#4caf50", fg="white", width=10,
-           command=check_login).pack(pady=15)
+    # Password
+    Label(card_frame, text="Password", font=("Helvetica", 12), bg="white", anchor=W).pack(fill=X, padx=40, pady=(10,0))
+    password_entry = Entry(card_frame, font=("Helvetica", 12), bd=1, relief=SOLID, show="*")
+    password_entry.pack(fill=X, padx=40, pady=5)
+
+    # Login Button
+    def on_enter(e):
+        login_btn['bg'] = "#2980b9"
+    def on_leave(e):
+        login_btn['bg'] = "#3498db"
+
+    login_btn = Button(card_frame, text="Login", font=("Helvetica", 12, "bold"), bg="#3498db", fg="white",
+                       activebackground="#2980b9", cursor="hand2", bd=0, relief=RIDGE, command=check_login)
+    login_btn.pack(pady=25, ipadx=10, ipady=5)
+    login_btn.bind("<Enter>", on_enter)
+    login_btn.bind("<Leave>", on_leave)
+
+    # Optional: Logo/Image placeholder
+    #logo_img = PhotoImage(file="logo.png")
+    #logo_label = Label(card_frame, image=logo_img, bg="white")
+    #logo_label.image = logo_img
+    #logo_label.place(x=160, y=10)
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     login_window()
