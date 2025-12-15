@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+import os  # 1. Add this import to run external files
 from employee_db import connect_database
 from dashboard import open_dashboard
 
@@ -19,8 +20,11 @@ def login_window():
 
         try:
             cursor.execute("USE inventory_management_system")
-            cursor.execute("SELECT name, password FROM employee_data WHERE emp_id=%s", (emp_id,))
+            
+            # 2. UPDATE QUERY: We added 'user_type' to the SELECT statement
+            cursor.execute("SELECT name, password, user_type FROM employee_data WHERE emp_id=%s", (emp_id,))
             result = cursor.fetchone()
+            
         except Exception as e:
             messagebox.showerror("Error", f"Database query failed: {str(e)}")
             return
@@ -29,9 +33,20 @@ def login_window():
             if cursor: cursor.close()
 
         if result and result[1] == password:
-            messagebox.showinfo("Success", f"Welcome {result[0]}!")
+            # result[0] is Name, result[1] is Password, result[2] is User Type
+            user_type = result[2]
+            
+            messagebox.showinfo("Success", f"Welcome {result[0]}!\nLogged in as {user_type}")
             root.destroy()
-            open_dashboard(result[0])
+
+            # 3. LOGIC CHECK: Open file based on User Type
+            if user_type == "Employee":
+                # Opens billing.py directly
+                os.system("python billing.py") 
+            else:
+                # Opens the Admin Dashboard
+                open_dashboard(result[0])
+                
         else:
             messagebox.showerror("Error", "Invalid Employee ID or Password")
 
@@ -70,12 +85,6 @@ def login_window():
     login_btn.pack(pady=25, ipadx=10, ipady=5)
     login_btn.bind("<Enter>", on_enter)
     login_btn.bind("<Leave>", on_leave)
-
-    # Optional: Logo/Image placeholder
-    #logo_img = PhotoImage(file="logo.png")
-    #logo_label = Label(card_frame, image=logo_img, bg="white")
-    #logo_label.image = logo_img
-    #logo_label.place(x=160, y=10)
 
     root.mainloop()
 

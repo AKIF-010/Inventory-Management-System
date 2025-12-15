@@ -1,130 +1,179 @@
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from employee_db import connect_database 
+# NOTE: Ensure employee_db.py is in the same folder
 
-def open_billing():
-    win = Tk()
-    win.title("Billing / Sales Page")
-    win.geometry("1500x800")
-    win.config(bg="white")
+def sales_form(window):
+    # 1. Main Frame Setup
+    sales_frame = Frame(window, width=1070, height=598, bg='white')
+    sales_frame.place(x=200, y=71)
+    
+    # Title
+    title = Label(sales_frame, text="Manage Sales & View Bills", font=("goudy old style", 20, "bold"), bg="#0f4d7d", fg="white").pack(side=TOP, fill=X)
 
-    # ===================== TITLE BAR =====================
-    title = Label(win, text="Inventory Management System",
-                  font=("times new roman", 30, "bold"), bg="#03396c", fg="white", pady=10)
-    title.pack(fill=X)
+    # ================= VARIABLES =================
+    bill_no_var = StringVar()
 
-    # ===================== MAIN FRAME =====================
-    main_frame = Frame(win, bg="white")
-    main_frame.pack(fill=BOTH, expand=True, padx=5, pady=5)
+    # ================= SEARCH BAR =================
+    search_frame = Frame(sales_frame, bg="white", bd=2, relief=RIDGE)
+    search_frame.place(x=50, y=50, width=600, height=40)
 
-    # ===================== LEFT: PRODUCT LIST =====================
-    product_frame = LabelFrame(main_frame, text="All Products", font=("times new roman", 14, "bold"),
-                               bg="white", fg="black", bd=3, relief=RIDGE)
-    product_frame.place(x=10, y=10, width=420, height=760)
+    lbl_search = Label(search_frame, text="Bill No:", bg="white", font=("times new roman", 15, "bold"))
+    lbl_search.place(x=10, y=5)
 
-    # Search Section
-    search_frame = Frame(product_frame, bg="white")
-    search_frame.pack(fill=X, pady=5)
+    txt_search = Entry(search_frame, textvariable=bill_no_var, font=("times new roman", 15), bg="lightyellow")
+    txt_search.place(x=100, y=5, width=180)
 
-    Label(search_frame, text="Search Product | By Name", font=("times new roman", 12, "bold"), bg="white").pack(anchor="w")
-    search_entry = Entry(search_frame, font=("times new roman", 12), width=25)
-    search_entry.pack(side=LEFT, padx=5, pady=5)
+    btn_search = Button(search_frame, text="Search", font=("times new roman", 12, "bold"), bg="#2196f3", fg="white", cursor="hand2", command=lambda: search_bill())
+    btn_search.place(x=300, y=4, width=120, height=28)
 
-    Button(search_frame, text="Search", width=10).pack(side=LEFT, padx=2)
-    Button(search_frame, text="Show All", width=10).pack(side=LEFT, padx=2)
+    btn_clear = Button(search_frame, text="Clear", font=("times new roman", 12, "bold"), bg="gray", fg="white", cursor="hand2", command=lambda: clear_search())
+    btn_clear.place(x=440, y=4, width=120, height=28)
 
-    # Product Table
-    product_table_frame = Frame(product_frame, bg="white", bd=2, relief=RIDGE)
-    product_table_frame.pack(fill=BOTH, expand=True)
+    # ================= SALES TABLE (Left Side) =================
+    sales_list_frame = Frame(sales_frame, bd=3, relief=RIDGE)
+    sales_list_frame.place(x=50, y=100, width=600, height=450)
 
-    product_table = ttk.Treeview(product_table_frame, columns=("pid", "name", "price", "qty", "status"),
-                                 show="headings")
+    scrolly = Scrollbar(sales_list_frame, orient=VERTICAL)
+    scrollx = Scrollbar(sales_list_frame, orient=HORIZONTAL)
 
-    for col in ("pid", "name", "price", "qty", "status"):
-        product_table.heading(col, text=col.upper())
-        product_table.column(col, width=60)
+    # Columns: Bill No, Date, Customer Name, Phone, Net Pay
+    # Note: 'bill_txt' is fetched but not shown in a column, we use it internally
+    Sales_Table = ttk.Treeview(sales_list_frame, columns=("bill_no", "date", "name", "phone", "amount"), yscrollcommand=scrolly.set, xscrollcommand=scrollx.set)
+    
+    scrollx.pack(side=BOTTOM, fill=X)
+    scrolly.pack(side=RIGHT, fill=Y)
+    scrollx.config(command=Sales_Table.xview)
+    scrolly.config(command=Sales_Table.yview)
 
-    product_table.pack(fill=BOTH, expand=True)
+    Sales_Table.heading("bill_no", text="Bill No.")
+    Sales_Table.heading("date", text="Date")
+    Sales_Table.heading("name", text="Customer Name")
+    Sales_Table.heading("phone", text="Phone")
+    Sales_Table.heading("amount", text="Amount")
 
-    # ===================== MIDDLE: CUSTOMER + CART + CALCULATOR =====================
-    middle_frame = Frame(main_frame, bg="white")
-    middle_frame.place(x=440, y=10, width=520, height=760)
+    Sales_Table.column("bill_no", width=120)
+    Sales_Table.column("date", width=100)
+    Sales_Table.column("name", width=150)
+    Sales_Table.column("phone", width=100)
+    Sales_Table.column("amount", width=100)
 
-    # Customer Details
-    cust_frame = LabelFrame(middle_frame, text="Customer Details", font=("times new roman", 14, "bold"),
-                            bg="white", fg="black", bd=3, relief=RIDGE)
-    cust_frame.pack(fill=X)
+    Sales_Table["show"] = "headings"
+    Sales_Table.pack(fill=BOTH, expand=1)
 
-    Label(cust_frame, text="Name:", bg="white", font=("times new roman", 12)).grid(row=0, column=0, padx=5, pady=5)
-    Entry(cust_frame, width=20, font=("times new roman", 12)).grid(row=0, column=1, padx=5, pady=5)
+    # ================= BILL AREA (Right Side) =================
+    bill_area_frame = Frame(sales_frame, bd=3, relief=RIDGE)
+    bill_area_frame.place(x=700, y=100, width=320, height=450)
 
-    Label(cust_frame, text="Contact No:", bg="white", font=("times new roman", 12)).grid(row=0, column=2, padx=5, pady=5)
-    Entry(cust_frame, width=20, font=("times new roman", 12)).grid(row=0, column=3, padx=5, pady=5)
+    lbl_title_bill = Label(bill_area_frame, text="Customer Bill Area", font=("goudy old style", 15, "bold"), bg="orange").pack(side=TOP, fill=X)
 
-    # Calculator Frame
-    calc_frame = Frame(middle_frame, bg="white", bd=3, relief=RIDGE)
-    calc_frame.pack(pady=10)
+    scrolly2 = Scrollbar(bill_area_frame, orient=VERTICAL)
+    bill_txt_area = Text(bill_area_frame, font=("times new roman", 12), bg="lightyellow", yscrollcommand=scrolly2.set)
+    scrolly2.pack(side=RIGHT, fill=Y)
+    scrolly2.config(command=bill_txt_area.yview)
+    bill_txt_area.pack(fill=BOTH, expand=1)
 
-    calc_display = Entry(calc_frame, font=("arial", 20, "bold"), bd=5, relief=RIDGE, justify=RIGHT)
-    calc_display.grid(row=0, column=0, columnspan=4, sticky="we")
+    # ================= FUNCTIONS =================
 
-    btn_texts = [
-        ("7", 1, 0), ("8", 1, 1), ("9", 1, 2), ("+", 1, 3),
-        ("4", 2, 0), ("5", 2, 1), ("6", 2, 2), ("-", 2, 3),
-        ("1", 3, 0), ("2", 3, 1), ("3", 3, 2), ("*", 3, 3),
-        ("0", 4, 0), ("C", 4, 1), ("=", 4, 2), ("/", 4, 3),
-    ]
+    def fetch_data():
+        """Fetches all bills from database and puts them in the table"""
+        cursor, connection = connect_database()
+        if not cursor or not connection:
+            return
 
-    for txt, r, c in btn_texts:
-        Button(calc_frame, text=txt, font=("arial", 15, "bold"), width=5, height=2).grid(row=r, column=c, padx=2, pady=2)
+        try:
+            cursor.execute("USE inventory_management_system")
+            # Select everything (including bill_txt)
+            cursor.execute("SELECT bill_no, date, customer_name, customer_phone, net_pay, bill_txt FROM bill_data")
+            rows = cursor.fetchall()
+            
+            Sales_Table.delete(*Sales_Table.get_children())
+            
+            for row in rows:
+                # We insert the row. Even though we only defined 5 columns, 
+                # Treeview stores the 6th element (bill_txt) in the values list invisibly.
+                Sales_Table.insert('', END, values=row)
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error fetching data: {str(e)}")
+        finally:
+            cursor.close()
+            connection.close()
 
-    # Cart Frame
-    cart_frame = LabelFrame(middle_frame, text="Cart", font=("times new roman", 14, "bold"),
-                            bg="white", fg="black", bd=3, relief=RIDGE)
-    cart_frame.pack(fill=BOTH, expand=True)
+    def get_data(event):
+        """When a row is clicked, show the bill text on the right side"""
+        try:
+            row_id = Sales_Table.focus() # Get selected row ID
+            content = Sales_Table.item(row_id) # Get data of that row
+            row = content['values']
+            
+            if not row:
+                return
 
-    cart_table = ttk.Treeview(cart_frame, columns=("pid", "name", "price"), show="headings")
-    for col in ("pid", "name", "price"):
-        cart_table.heading(col, text=col.upper())
-        cart_table.column(col, width=80)
-    cart_table.pack(fill=BOTH, expand=True)
+            # row structure: [bill_no, date, name, phone, amount, bill_txt]
+            # Since bill_txt is the 6th item (index 5)
+            # Note: Sometimes Treeview returns text with \n as spaces, so we grab exact index
+            
+            # Accessing index 5 for bill_txt
+            # If the treeview cut it off, we might need to fetch by ID, 
+            # but usually, it stores the full tuple.
+            
+            # Let's write the text to the side area
+            bill_txt_area.delete('1.0', END)
+            # In some Tkinter versions, values might treat large text oddly.
+            # If so, we can query DB by Bill No. Let's try direct access first:
+            if len(row) >= 6:
+                bill_txt_area.insert(END, row[5])
+            else:
+                # Fallback: Query DB if the text didn't transfer fully
+                print_bill_from_db(row[0])
 
-    # Product Details + Add/Update Frame
-    bottom_mid_frame = Frame(middle_frame, bg="white", bd=3, relief=RIDGE)
-    bottom_mid_frame.pack(fill=X, pady=5)
+        except Exception as e:
+            pass # Clicked empty area
 
-    Label(bottom_mid_frame, text="Product Name:", font=("times new roman", 12), bg="white").grid(row=0, column=0, padx=5, pady=5)
-    Entry(bottom_mid_frame, width=20).grid(row=0, column=1)
+    def print_bill_from_db(bill_no):
+        """Helper to fetch text if treeview click fails"""
+        cursor, connection = connect_database()
+        try:
+            cursor.execute("USE inventory_management_system")
+            cursor.execute("SELECT bill_txt FROM bill_data WHERE bill_no=%s", (bill_no,))
+            row = cursor.fetchone()
+            if row:
+                bill_txt_area.insert(END, row[0])
+        finally:
+            cursor.close()
+            connection.close()
 
-    Label(bottom_mid_frame, text="Price Per Qty:", font=("times new roman", 12), bg="white").grid(row=1, column=0, padx=5, pady=5)
-    Entry(bottom_mid_frame, width=20).grid(row=1, column=1)
+    def search_bill():
+        """Search by Bill Number"""
+        if bill_no_var.get() == "":
+            messagebox.showerror("Error", "Search input should be required")
+            return
+            
+        cursor, connection = connect_database()
+        try:
+            cursor.execute("USE inventory_management_system")
+            cursor.execute("SELECT bill_no, date, customer_name, customer_phone, net_pay, bill_txt FROM bill_data WHERE bill_no LIKE %s", ('%' + bill_no_var.get() + '%',))
+            rows = cursor.fetchall()
+            
+            if len(rows) != 0:
+                Sales_Table.delete(*Sales_Table.get_children())
+                for row in rows:
+                    Sales_Table.insert('', END, values=row)
+            else:
+                messagebox.showerror("Error", "No Bill Found")
+        except Exception as e:
+             messagebox.showerror("Error", f"Error: {str(e)}")
+        finally:
+            cursor.close()
+            connection.close()
 
-    Label(bottom_mid_frame, text="Quantity:", font=("times new roman", 12), bg="white").grid(row=2, column=0, padx=5, pady=5)
-    Entry(bottom_mid_frame, width=20).grid(row=2, column=1)
+    def clear_search():
+        bill_no_var.set("")
+        fetch_data()
 
-    Button(bottom_mid_frame, text="Clear", width=15).grid(row=3, column=0, pady=10)
-    Button(bottom_mid_frame, text="Add | Update", width=15).grid(row=3, column=1, pady=10)
+    # ================= BINDINGS & INITIALIZATION =================
+    Sales_Table.bind("<ButtonRelease-1>", get_data) # On Click event
+    fetch_data() # Load data when frame opens
 
-    # ===================== RIGHT: CUSTOMER BILL AREA =====================
-    bill_frame = LabelFrame(main_frame, text="Customer Bill Area", font=("times new roman", 14, "bold"),
-                            bg="white", fg="black", bd=3, relief=RIDGE)
-    bill_frame.place(x=970, y=10, width=520, height=760)
-
-    bill_text = Text(bill_frame, font=("courier", 12))
-    bill_text.pack(fill=BOTH, expand=True)
-
-    # ===================== BOTTOM BILL BUTTONS =====================
-    btn_frame = Frame(bill_frame, bg="white")
-    btn_frame.pack(fill=X, pady=10)
-
-    Button(btn_frame, text="Bill Amount", width=12).grid(row=0, column=0, padx=5)
-    Button(btn_frame, text="Discount [5%]", width=12).grid(row=0, column=1, padx=5)
-    Button(btn_frame, text="Net Pay", width=12).grid(row=0, column=2, padx=5)
-    Button(btn_frame, text="Generate Bill", width=12).grid(row=0, column=3, padx=5)
-    Button(btn_frame, text="Clear All", width=12).grid(row=0, column=4, padx=5)
-    Button(btn_frame, text="Print", width=12).grid(row=0, column=5, padx=5)
-
-    win.mainloop()
-
-
-if __name__ == "__main__":
-    open_billing()
+    return sales_frame
