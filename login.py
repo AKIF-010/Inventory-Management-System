@@ -42,7 +42,7 @@ def login_window():
             # 3. LOGIC CHECK: Open file based on User Type
             if user_type == "Employee":
                 # Opens billing.py directly
-                os.system("python billing.py") 
+                os.system(f'python billing.py "{result[0]}"')
             else:
                 # Opens the Admin Dashboard
                 open_dashboard(result[0])

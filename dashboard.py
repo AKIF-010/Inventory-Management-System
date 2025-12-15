@@ -131,6 +131,8 @@ def open_dashboard(employee_name="Admin"):
         cursor.execute("SELECT * FROM product_data")
         total_product_count.set(str(len(cursor.fetchall())))
 
+        cursor.execute("SELECT * FROM bill_data")
+        total_sales_count.set(str(len(cursor.fetchall())))
         cursor.close()
         connection.close()
 

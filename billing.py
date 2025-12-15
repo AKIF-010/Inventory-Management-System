@@ -5,6 +5,7 @@ from employee_db import connect_database
 from tkinter import messagebox
 import os 
 import random 
+import sys # <--- 1. ADD THIS IMPORT
 
 # Placeholder for database connection logic
 # NOTE: connect_database is assumed to be defined in employee_db.py
@@ -14,6 +15,13 @@ window.title('Inventory Management System')
 window.geometry('1270x668+0+0')
 window.resizable(0, 0)
 window.config(bg='white')
+
+# ==================== GET LOGGED IN USER ====================
+# Default to "Admin" if file is run directly, otherwise get from Login
+current_user = "Admin"
+if len(sys.argv) > 1:
+    current_user = sys.argv[1]
+# ============================================================
 
 # ==================== GLOBAL VARIABLES FOR DATA BINDING ====================
 # Variables for input entries
@@ -42,7 +50,7 @@ NEW_FRAME_HEIGHT = MAX_Y - HEADER_Y_OFFSET
 def logout():
     op = messagebox.askyesno("Confirm", "Do you really want to logout?")
     if op == True:
-        window.destroy() # CHANGED: 'root' to 'window'
+        window.destroy() 
         os.system("python login.py") 
 
 top_frame = Frame(window, bg='#1D293D', height=HEADER_HEIGHT+7, width=1270)
@@ -52,9 +60,10 @@ top_frame.grid_propagate(False)
 top_frame.columnconfigure(0, weight=1)
 top_frame.columnconfigure(1, weight=0)
 
+# UPDATED: Display the user name here
 welcome_label = Label(
     top_frame,
-    text='Welcome To IMS PRO',
+    text=f'Welcome, {current_user} | IMS PRO', 
     font=('Tahoma', 16, 'bold'),
     bg='#1D293D',
     fg='white',
@@ -82,7 +91,7 @@ logout_btn = Button(
     padx=14,
     pady=6,
     cursor='hand2',
-    command=logout  # CHANGED: Removed 'lambda:' so it executes correctly
+    command=logout 
 )
 logout_btn.grid(row=0, column=1, sticky=E, padx=20, pady=6)
 
@@ -95,6 +104,77 @@ date_label = Label(
     width=1270
 )
 date_label.grid(row=1, column=0, columnspan=2, sticky=W)
+
+# ... (Keep all your Product/Cart Functions the same until Generate Bill) ...
+
+
+def generate_bill():
+    """Generates the bill text in the bill_text widget."""
+    global cart_data
+    
+    if not cart_data:
+        messagebox.showwarning("Warning", "Cart is empty. Please add products first.")
+        return
+
+    # 1. Gather Customer and Total Data
+    customer_name = customer_name_entry.get().strip()
+    customer_phone = customer_phone_entry.get().strip()
+    
+    try:
+        total_gross = float(bill_amount_label.cget("text").split('\n')[1])
+        total_discount = float(discount_label.cget("text").split('\n')[1])
+        net_pay = float(net_pay_label.cget("text").split('\n')[1])
+    except:
+        messagebox.showerror("Error", "Billing totals could not be read. Please try again.")
+        return
+
+    
+    # Generate a unique Bill ID
+    bill_id = strftime("%Y%m%d%H%M%S") + str(random.randint(10, 99))
+    
+    # 2. Build Bill Header (UPDATED TO SHOW BILLER NAME)
+    bill_content = f"""
+========================================
+|          INVENTORY MANAGEMENT        |
+|               SALES BILL             |
+========================================
+Bill ID: {bill_id}
+Date: {strftime('%d-%m-%Y')}
+Time: {strftime('%I:%M:%S %p')}
+Biller: {current_user}
+Customer: {customer_name if customer_name else 'N/A'}
+Phone: {customer_phone if customer_phone else 'N/A'}
+----------------------------------------
+| Product       QTY   @Disc  Net Price|
+----------------------------------------
+"""
+
+    # 3. Build Bill Items 
+    for item in cart_data:
+        pid, name, price, discount_rate, qty, subtotal = item
+        disc_unit_price = price * (1 - discount_rate / 100.0)
+        name_short = (name[:13] + '..') if len(name) > 15 else name
+        item_line = f"| {name_short:<13} {qty:<5} {disc_unit_price:6.2f} {subtotal:8.2f} |\n"
+        bill_content += item_line
+
+    # 4. Build Bill Footer
+    bill_content += f"""----------------------------------------
+Gross Amount: \t\t{total_gross:10.2f}
+Discount:     \t\t-{total_discount:9.2f}
+========================================
+NET PAYABLE:  \t\t{net_pay:10.2f}
+========================================
+|   Thank You For Your Business!   |
+========================================
+    """
+
+    # 5. Display in Text Widget
+    bill_text.delete(1.0, END)
+    bill_text.insert(END, bill_content)
+    
+    return bill_id, net_pay 
+
+# ... (Rest of your code remains the same) ...
 
 # ======================= PRODUCT LIST FUNCTIONS =========================#
 
@@ -526,80 +606,6 @@ def add_to_cart():
     # 5. Refresh UI and clear input
     refresh_cart_treeview()
     clear_product_data()
-
-
-def generate_bill():
-    """Generates the bill text in the bill_text widget."""
-    global cart_data
-    
-    if not cart_data:
-        messagebox.showwarning("Warning", "Cart is empty. Please add products first.")
-        return
-
-    # 1. Gather Customer and Total Data
-    customer_name = customer_name_entry.get().strip()
-    customer_phone = customer_phone_entry.get().strip()
-    
-    # Get total figures from labels (ensures synchronization with calculations)
-    try:
-        total_gross = float(bill_amount_label.cget("text").split('\n')[1])
-        total_discount = float(discount_label.cget("text").split('\n')[1])
-        net_pay = float(net_pay_label.cget("text").split('\n')[1])
-    except:
-        messagebox.showerror("Error", "Billing totals could not be read. Please try again.")
-        return
-
-    
-    # Generate a unique Bill ID
-    bill_id = strftime("%Y%m%d%H%M%S") + str(random.randint(10, 99))
-    
-    # 2. Build Bill Header
-    bill_content = f"""
-========================================
-|          INVENTORY MANAGEMENT        |
-|                SALES BILL            |
-========================================
-Bill ID: {bill_id}
-Date: {strftime('%d-%m-%Y')}
-Time: {strftime('%I:%M:%S %p')}
-Customer: {customer_name if customer_name else 'N/A'}
-Phone: {customer_phone if customer_phone else 'N/A'}
-----------------------------------------
-| Product       QTY   @Disc   Net Price|
-----------------------------------------
-"""
-
-    # 3. Build Bill Items (using the original price to calculate the line subtotal)
-    for item in cart_data:
-        # pid, name, price (original), discount_rate, qty, subtotal
-        pid, name, price, discount_rate, qty, subtotal = item
-        
-        # Calculate discounted unit price (for display in the @Disc column)
-        disc_unit_price = price * (1 - discount_rate / 100.0)
-        
-        # Format the item line
-        # Use a maximum of 13 characters for the name for alignment
-        name_short = (name[:13] + '..') if len(name) > 15 else name
-        
-        item_line = f"| {name_short:<13} {qty:<5} {disc_unit_price:6.2f} {subtotal:8.2f} |\n"
-        bill_content += item_line
-
-    # 4. Build Bill Footer
-    bill_content += f"""----------------------------------------
-Gross Amount: \t\t{total_gross:10.2f}
-Discount:     \t\t-{total_discount:9.2f}
-========================================
-NET PAYABLE:  \t\t{net_pay:10.2f}
-========================================
-|   Thank You For Your Business!   |
-========================================
-    """
-
-    # 5. Display in Text Widget
-    bill_text.delete(1.0, END)
-    bill_text.insert(END, bill_content)
-    
-    return bill_id, net_pay # Return data for saving
 
 
 def finalize_sale_and_save():
